@@ -1,10 +1,5 @@
 import snmp from "net-snmp";
-
-export interface SnmpResult {
-  oid: string;
-  value?: string;
-  error?: string;
-}
+import { SnmpResult } from "../models";
 
 export class SnmpV2CService {
   private ip: string;

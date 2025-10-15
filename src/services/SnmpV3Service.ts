@@ -1,31 +1,18 @@
 import snmp from "net-snmp";
-
-export interface SnmpResult {
-  oid: string;
-  value?: string;
-  error?: string;
-}
-
-export interface SnmpV3Config {
-  context: string;
-  user: string;
-  authProtocol?: "md5" | "sha";
-  authKey?: string;
-  privProtocol?: "des" | "aes";
-  privKey?: string;
-  level?: "noAuthNoPriv" | "authNoPriv" | "authPriv";
-}
+import { SnmpResult, SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3Security, SnmpV3SecurityLevel } from "../models";
 
 export class SnmpV3Service {
   private ip: string;
   private port: number;
-  private config: SnmpV3Config;
+  private context: string;
+  private security: SnmpV3Security;
   private session: snmp.Session | null = null;
 
-  constructor(ip: string, port: number, config: SnmpV3Config) {
+  constructor(ip: string, port: number, context: string, security: SnmpV3Security) {
     this.ip = ip;
-    this.config = config;
     this.port = port;
+    this.context = context;
+    this.security = security;
   }
 
   private createSession() {
@@ -36,33 +23,33 @@ export class SnmpV3Service {
       port: this.port,
       timeout: 5000,
       retries: 1,
-      context: this.config.context
+      context: this.context
     };
 
     const user: snmp.V3User = {
       level:
-        this.config.level === "authPriv"
+        this.security.level === SnmpV3SecurityLevel.AuthPriv
           ? snmp.SecurityLevel.authPriv
-          : this.config.level === "authNoPriv"
+          : this.security.level === SnmpV3SecurityLevel.AuthNoPriv
           ? snmp.SecurityLevel.authNoPriv
           : snmp.SecurityLevel.noAuthNoPriv,
-      name: this.config.user,
+      name: this.security.user,
     };
 
     if (user.level === snmp.SecurityLevel.authNoPriv || user.level === snmp.SecurityLevel.authPriv) {
       user.authProtocol =
-        this.config.authProtocol === "sha"
+        this.security.authProtocol === SnmpV3AuthProtocol.SHA
           ? snmp.AuthProtocols.sha
           : snmp.AuthProtocols.md5;
-      user.authKey = this.config.authKey!;
+      user.authKey = this.security.authKey!;
     }
 
     if (user.level === snmp.SecurityLevel.authPriv) {
       user.privProtocol =
-        this.config.privProtocol === "aes"
+        this.security.privProtocol === SnmpV3PrivProtocol.AES
           ? snmp.PrivProtocols.aes
           : snmp.PrivProtocols.des;
-      user.privKey = this.config.privKey!;
+      user.privKey = this.security.privKey!;
     }
 
     this.session = snmp.createV3Session(this.ip, user, options);
