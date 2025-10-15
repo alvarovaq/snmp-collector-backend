@@ -7,6 +7,7 @@ export interface SnmpResult {
 }
 
 export interface SnmpV3Config {
+  context: string;
   user: string;
   authProtocol?: "md5" | "sha";
   authKey?: string;
@@ -18,15 +19,13 @@ export interface SnmpV3Config {
 export class SnmpV3Service {
   private ip: string;
   private port: number;
-  private context: string;
   private config: SnmpV3Config;
   private session: snmp.Session | null = null;
 
-  constructor(ip: string, port: number, context: string, config: SnmpV3Config) {
+  constructor(ip: string, port: number, config: SnmpV3Config) {
     this.ip = ip;
     this.config = config;
     this.port = port;
-    this.context = context;
   }
 
   private createSession() {
@@ -37,7 +36,7 @@ export class SnmpV3Service {
       port: this.port,
       timeout: 5000,
       retries: 1,
-      context: this.context
+      context: this.config.context
     };
 
     const user: snmp.V3User = {

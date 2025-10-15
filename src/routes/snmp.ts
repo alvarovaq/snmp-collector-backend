@@ -20,14 +20,58 @@ router.get("/v2c", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/v3", async (req: Request, res: Response) => {
+router.get("/v3/2", async (req: Request, res: Response) => {
   const ip: string = "127.0.0.1";
   const port: number = 16102;
-  const context: string = "public";
   const oid: string = "1.3.6.1.2.1.1.1.0";
 
   const config: SnmpV3Config = {
-    user: "userSHA",
+    context: "public",
+    user: "user2",
+    level: "noAuthNoPriv"
+  };
+
+  try {
+    const snmpService = new SnmpV3Service(ip, port, config);
+    const result = await snmpService.get(oid);
+    res.json({ ip, oid, result });
+  } catch (error: any) {
+    console.error("❌ Error SNMP:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/v3/3", async (req: Request, res: Response) => {
+  const ip: string = "127.0.0.1";
+  const port: number = 16103;
+  const oid: string = "1.3.6.1.2.1.1.1.0";
+
+  const config: SnmpV3Config = {
+    context: "public",
+    user: "user3",
+    authProtocol: "md5",
+    authKey: "authpass",
+    level: "authNoPriv"
+  };
+
+  try {
+    const snmpService = new SnmpV3Service(ip, port, config);
+    const result = await snmpService.get(oid);
+    res.json({ ip, oid, result });
+  } catch (error: any) {
+    console.error("❌ Error SNMP:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/v3/4", async (req: Request, res: Response) => {
+  const ip: string = "127.0.0.1";
+  const port: number = 16104;
+  const oid: string = "1.3.6.1.2.1.1.1.0";
+
+  const config: SnmpV3Config = {
+    context: "public",
+    user: "user4",
     authProtocol: "sha",
     authKey: "authpass",
     level: "authPriv",
@@ -36,7 +80,7 @@ router.get("/v3", async (req: Request, res: Response) => {
   };
 
   try {
-    const snmpService = new SnmpV3Service(ip, port, context, config);
+    const snmpService = new SnmpV3Service(ip, port, config);
     const result = await snmpService.get(oid);
     res.json({ ip, oid, result });
   } catch (error: any) {

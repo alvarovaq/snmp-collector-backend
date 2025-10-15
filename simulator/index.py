@@ -16,28 +16,31 @@ simulators = [
         "name": "device01",
         "port": 16101,
         "version": "2c",
-        "community": "public",
-        "snmprec": os.path.join(RES_DIR, "device01")
+        "community": "public"
     },
     {
         "name": "device02",
         "port": 16102,
         "version": "3",
-        "user": "userSHA",
-        "auth_protocol": "SHA",
-        "auth_password": "authpass",
-        "priv_protocol": "AES",
-        "priv_password": "privpass",
-        "snmprec": os.path.join(RES_DIR, "device02")
+        "user": "user2"
     },
     {
         "name": "device03",
         "port": 16103,
         "version": "3",
-        "user": "userMD5",
+        "user": "user3",
         "auth_protocol": "MD5",
+        "auth_password": "authpass"
+    },
+    {
+        "name": "device04",
+        "port": 16104,
+        "version": "3",
+        "user": "user4",
+        "auth_protocol": "SHA",
         "auth_password": "authpass",
-        "snmprec": os.path.join(RES_DIR, "device03")
+        "priv_protocol": "AES",
+        "priv_password": "privpass"
     }
 ]
 
@@ -48,20 +51,23 @@ for sim in simulators:
     
     cmd += ["--agent-udpv4-endpoint", f"127.0.0.1:{sim['port']}"]
     
-    cmd += ["--data-dir", sim["snmprec"]]
+    cmd += ["--data-dir", os.path.join(RES_DIR, sim["name"])]
     
     if sim["version"] == "3":
         cmd += [
             "--v3-only",
-            "--v3-user", sim["user"],
-            "--v3-auth-proto", sim["auth_protocol"],
-            "--v3-auth-key", sim["auth_password"],
+            "--v3-user", sim["user"]
         ]
-        if "priv_protocol" in sim and "priv_password" in sim:
+        if "auth_protocol" in sim and "auth_password" in sim:
             cmd += [
-                "--v3-priv-proto", sim["priv_protocol"],
-                "--v3-priv-key", sim["priv_password"]
+                "--v3-auth-proto", sim["auth_protocol"],
+                "--v3-auth-key", sim["auth_password"]
             ]
+            if "priv_protocol" in sim and "priv_password" in sim:
+                cmd += [
+                    "--v3-priv-proto", sim["priv_protocol"],
+                    "--v3-priv-key", sim["priv_password"]
+                ]
         
     log_file_path = os.path.join(LOG_DIR, f"{sim['name']}_{sim['port']}.log")
     log_file = open(log_file_path, "w")
