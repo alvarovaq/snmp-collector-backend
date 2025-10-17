@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
-import { SnmpV2CService } from "../services/snmp-v2c.service";
-import { SnmpV3Service } from "../services/snmp-v3.service";
+import { SnmpV2CService, SnmpV3Service } from "../services";
 import { SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3Security, SnmpV3SecurityLevel } from "../models";
 
 const router = Router();

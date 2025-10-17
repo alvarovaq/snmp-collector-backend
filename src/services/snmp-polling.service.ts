@@ -2,7 +2,7 @@ import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
 
-export type SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult[]) => void;
+export type SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult) => void;
 
 type IntervalKey = `${number}-${string}`;
 
@@ -26,7 +26,9 @@ export class SnmpPollingService
         const interval = setInterval(async () => {
             try {
                 const result = await this.pollOid(deviceConfig, oid);
-                this.onResult?.(deviceId, oid, result);
+                if (result !== undefined) {
+                    this.onResult?.(deviceId, oid, result);
+                }
             }
             catch (err) {
                 console.error(`[SnmpPollingService] Polling error (device: ${deviceId}) (oid: ${oid}):`, err);
@@ -63,7 +65,7 @@ export class SnmpPollingService
         this.intervals.clear();
     }
 
-    private async pollOid(deviceConfig: DeviceConfig, oid: string): Promise<SnmpResult[]> {
+    private async pollOid(deviceConfig: DeviceConfig, oid: string): Promise<SnmpResult | undefined> {
         if (deviceConfig.version == SnmpVersion.Version2c) {
             const snmp2 = new SnmpV2CService(deviceConfig.ip, deviceConfig.port, deviceConfig.community!);
             return snmp2.get(oid);
@@ -72,7 +74,7 @@ export class SnmpPollingService
             return snmp3.get(oid);
         }
 
-        return [];
+        return undefined;
     }
 
     private makeIntervalKey(deviceId: number, oid: string): IntervalKey {

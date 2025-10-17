@@ -20,7 +20,7 @@ export class SnmpV2CService {
     }
   }
 
-  public async get(oid: string): Promise<SnmpResult[]> {
+  public async get(oid: string): Promise<SnmpResult> {
     return new Promise((resolve, reject) => {
       this.createSession();
 
@@ -29,21 +29,22 @@ export class SnmpV2CService {
       }
 
       this.session.get([oid], (error: Error | null, varbinds: snmp.Varbind[]) => {
+        this.close();
+
         if (error) {
-          this.close();
           return reject(error);
         }
 
-        const results: SnmpResult[] = varbinds.map((vb: snmp.Varbind) => {
-          if (snmp.isVarbindError(vb)) {
-            return { oid: vb.oid, error: snmp.varbindError(vb) };
-          } else {
-            return { oid: vb.oid, value: vb.value.toString() };
-          }
-        });
-
-        this.close();
-        resolve(results);
+        const vb = varbinds?.[0];
+        if (!vb) {
+          return reject(new Error("No varbinds returned"));
+        }
+        
+        if (snmp.isVarbindError(vb)) {
+          return resolve({ oid: vb.oid, error: snmp.varbindError(vb) });
+        }
+        
+        return resolve({ oid: vb.oid, value: vb.value.toString() });
       });
     });
   }

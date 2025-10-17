@@ -1,12 +1,24 @@
+import { SnmpResult } from "../models";
 import { DevicesService } from "./devices.service";
-import { SnmpPollingService } from "./snmp-polling.service";
-import { Device, SnmpVersion } from "../models";
+import { OidRecordsService } from "./oid-records.service";
+import { SnmpPollingCallback, SnmpPollingService } from "./snmp-polling.service";
 
-const snmpPollingService = new SnmpPollingService((deviceId, oid, results) => {
-    console.log(`[${deviceId}] (${oid}): `, results);
-});
+export * from "./snmp-v2c.service";
+export * from "./snmp-v3.service";
+export * from "./snmp-polling.service";
+export * from "./devices.service";
+export * from "./oid-records.service";
+
+const oidRecordsService = new OidRecordsService();
+
+const onNewValue: SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult): void => {
+    oidRecordsService.setValue(deviceId, oid, result);
+};
+
+const snmpPollingService = new SnmpPollingService(onNewValue);
 const devicesService = new DevicesService(snmpPollingService);
 
 export {
-    devicesService
+    devicesService,
+    oidRecordsService
 };
