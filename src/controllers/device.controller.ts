@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { logger, devicesService } from "../services";
 
 export class DevicesController {
-    public static async getDevices(req: Request, res: Response) {
+    public static async getAll(req: Request, res: Response) {
         try {
             const devices = devicesService.getDevices();
             res.status(200).json(devices);
@@ -12,7 +12,7 @@ export class DevicesController {
         }
     }
     
-    public static async getDevice(req: Request, res: Response) {
+    public static async get(req: Request, res: Response) {
         try {
             const id = parseInt(req.params.id);
             const device = devicesService.getDevice(id);
