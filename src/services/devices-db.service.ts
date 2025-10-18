@@ -1,6 +1,6 @@
 import { pool } from "../config/db";
 import { Device, OidConfig, SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3SecurityLevel, SnmpVersion } from "../models";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 export class DevicesDBService {
   public static async getDevices(): Promise<Device[]> {

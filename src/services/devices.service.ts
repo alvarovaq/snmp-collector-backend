@@ -1,7 +1,7 @@
 import { Device, OidConfig } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();

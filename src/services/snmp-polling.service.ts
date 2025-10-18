@@ -1,7 +1,7 @@
 import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 export type SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult) => void;
 

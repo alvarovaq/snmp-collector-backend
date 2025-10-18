@@ -1,6 +1,6 @@
 import { OidRecord, SnmpResult } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 type RecordKey = `${number}-${string}`;
 

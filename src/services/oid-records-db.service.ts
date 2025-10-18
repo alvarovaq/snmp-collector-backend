@@ -1,6 +1,6 @@
 import { pool } from "../config/db";
 import { OidRecord } from "../models";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 export class OidRecordsDBService {
     public static async addRecord(record: OidRecord): Promise<void> {
