@@ -11,7 +11,8 @@ export const env = {
         name: process.env.DB_NAME!,
     },
     log: {
-        toFile: Boolean(process.env.LOG_TO_FILE) || false,
+        toFile: Boolean(process.env.LOG_TO_FILE === "true") || false,
+        dir: process.env.LOG_DIR,
         level: process.env.LOG_LEVEL || "INFO",
     }
 };
