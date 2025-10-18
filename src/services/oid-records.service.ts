@@ -1,4 +1,5 @@
 import { OidRecord, SnmpResult } from "../models";
+import { OidRecordsDBService } from "./oid-records-db.service";
 
 type RecordKey = `${number}-${string}`;
 
@@ -8,16 +9,28 @@ export class OidRecordsService {
     public setValue(deviceId: number, oid: string, result: SnmpResult): void {
         const key = this.makeRecordKey(deviceId, oid);
 
-        const record: OidRecord = {
-            deviceId,
-            oid,
-            value: result.value,
-            error: result.error,
-            timestamp: Date.now()
-        };
+        const lastRecord = this.records.get(key);
+        const hasChange = !lastRecord || lastRecord.value !== result.value || lastRecord.error !== result.error;
+        if (hasChange) {
+            const record: OidRecord = {
+                deviceId,
+                oid,
+                value: result.value,
+                error: result.error,
+                type: result.type,
+                date: new Date()
+            };
+            
+            this.records.set(key, record);
+            OidRecordsDBService.addRecord(record);
+        }
 
-        this.logRecord(record);
-        this.records.set(key, record);
+        const hasValue = result.value !== undefined && result.value !== null;
+        if (hasValue) {
+            console.log(`[OidRecordsService] (dev: ${deviceId}) (oid: ${oid}) (upd: ${hasChange}): ${result.value}`);
+        } else {
+            console.log(`[OidRecordsService] (dev: ${deviceId}) (oid: ${oid}) (upd: ${hasChange}) error: ${result.error}`);
+        }
     }
 
     public getValue(deviceId: number, oid: string): OidRecord | undefined {
@@ -35,12 +48,5 @@ export class OidRecordsService {
 
     private makeRecordKey(deviceId: number, oid: string): RecordKey {
         return `${deviceId}-${oid}`;
-    }
-
-    private logRecord(record: OidRecord): void {
-        const hasValue = record.value !== undefined && record.value !== null;
-        const status = hasValue ? "value" : "error";
-        const value = record.value ?? record.error ?? "-";
-        console.log(`[OidRecordsService] (dev: ${record.deviceId}) (oid: ${record.oid}) (${status}): ${value}`);
     }
 }

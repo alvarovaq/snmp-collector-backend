@@ -1,7 +1,26 @@
+export enum SnmpObjType {
+	Boolean = "Boolean",
+	Integer = "Integer",
+	BitString = "BitString",
+	OctetString = "OctetString",
+	Null = "Null",
+	OID = "OID",
+	IpAddress = "IpAddress",
+	Counter = "Counter",
+	Gauge = "Gauge",
+	TimeTicks = "TimeTicks",
+	Opaque = "Opaque",
+	Counter64 = "Counter64",
+  NoSuchObject = "NoSuchObject",
+  NoSuchInstance = "NoSuchInstance",
+  EndOfMibView = "EndOfMibView",
+}
+
 export interface SnmpResult {
   oid: string;
   value?: string;
   error?: string;
+  type: SnmpObjType;
 }
 
 export enum SnmpVersion {
