@@ -1,5 +1,6 @@
 import { pool } from "../config/db";
 import { OidRecord } from "../models";
+import { logger } from "./";
 
 export class OidRecordsDBService {
     public static async addRecord(record: OidRecord): Promise<void> {
@@ -11,7 +12,7 @@ export class OidRecordsDBService {
     
             await pool.query(query, [record.deviceId, record.oid, record.value, record.error, record.type, record.date]);
         } catch (err) {
-            console.error("[OidRecordsDBService] Failed to insert record:", err);
+            logger.error(`Failed to insert record (dev: ${record.deviceId}) (oid: ${record.oid}):`, "OidRecordsDBService", err);
         }
     }
 }

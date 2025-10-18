@@ -1,6 +1,7 @@
 import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
+import { logger } from "./";
 
 export type SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult) => void;
 
@@ -31,7 +32,7 @@ export class SnmpPollingService
                 }
             }
             catch (err) {
-                console.error(`[SnmpPollingService] Polling error (device: ${deviceId}) (oid: ${oid}):`, err);
+                logger.error(`Polling error (device: ${deviceId}) (oid: ${oid}):`, "SnmpPollingService", err);
             }
         }, frequency * 1000);
 

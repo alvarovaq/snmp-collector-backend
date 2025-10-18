@@ -1,5 +1,6 @@
 import { pool } from "../config/db";
 import { Device, OidConfig, SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3SecurityLevel, SnmpVersion } from "../models";
+import { logger } from "./";
 
 export class DevicesDBService {
   public static async getDevices(): Promise<Device[]> {
@@ -42,7 +43,7 @@ export class DevicesDBService {
 
         return devices;
     } catch (err) {
-        console.error("[DevicesDBService] Failed to get devices:", err);
+        logger.error("Failed to get devices:", "DevicesDBService", err);
     }
 
     return [];
@@ -66,7 +67,7 @@ export class DevicesDBService {
             return oidConfig;
         });
     } catch (err) {
-        console.error("[DevicesDBService] Failed to get oids:", err);
+        logger.error("Failed to get oids:", "DevicesDBService", err);
     }
 
     return [];

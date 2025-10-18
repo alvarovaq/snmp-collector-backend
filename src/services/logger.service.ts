@@ -44,24 +44,36 @@ export class LoggerService {
     return LoggerService.instance;
   }
 
-  private formatMessage(level: LogLevel, message: string): string {
-    const timestamp = new Date().toISOString();
+  private getLocalTimestamp(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  private formatMessage(level: LogLevel, message: string, context?: string): string {
+    const timestamp = this.getLocalTimestamp();
     const levelName = LogLevel[level];
-    return `[${timestamp}] [${levelName}] ${message}`;
+    const contextLog = context ? `[${context}] ` : "";
+    return `[${timestamp}] [${levelName}] ${contextLog}${message}`;
   }
 
   private shouldLog(level: LogLevel): boolean {
     return level <= this.currentLevel;
   }
 
-  private write(level: LogLevel, message: string) {
+  private write(level: LogLevel, message: string, context?: string, error?: any) {
     if (!this.shouldLog(level)) return;
 
-    const formatted = this.formatMessage(level, message);
+    const formatted = this.formatMessage(level, message, context);
 
     switch (level) {
       case LogLevel.ERROR:
-        console.error(formatted);
+        console.error(formatted, error);
         break;
       case LogLevel.WARN:
         console.warn(formatted);
@@ -80,20 +92,20 @@ export class LoggerService {
     }
   }
 
-  public error(message: string) {
-    this.write(LogLevel.ERROR, message);
+  public error(message: string, context?: string, error?: any) {
+    this.write(LogLevel.ERROR, message, context, error);
   }
 
-  public warn(message: string) {
-    this.write(LogLevel.WARN, message);
+  public warn(message: string, context?: string) {
+    this.write(LogLevel.WARN, message, context);
   }
 
-  public info(message: string) {
-    this.write(LogLevel.INFO, message);
+  public info(message: string, context?: string) {
+    this.write(LogLevel.INFO, message, context);
   }
 
-  public debug(message: string) {
-    this.write(LogLevel.DEBUG, message);
+  public debug(message: string, context?: string) {
+    this.write(LogLevel.DEBUG, message, context);
   }
 }
 

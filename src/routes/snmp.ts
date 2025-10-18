@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { SnmpV2CService, SnmpV3Service } from "../services";
+import { SnmpV2CService, SnmpV3Service, logger } from "../services";
 import { SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3Security, SnmpV3SecurityLevel } from "../models";
 
 const router = Router();
@@ -15,7 +15,7 @@ router.get("/v2c", async (req: Request, res: Response) => {
     const result = await snmpService.get(oid);
     res.json({ ip, oid, result });
   } catch (error: any) {
-    console.error("❌ Error SNMP:", error.message);
+    logger.error("❌ Error SNMP:", undefined, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -36,7 +36,7 @@ router.get("/v3/2", async (req: Request, res: Response) => {
     const result = await snmpService.get(oid);
     res.json({ ip, oid, result });
   } catch (error: any) {
-    console.error("❌ Error SNMP:", error.message);
+    logger.error("❌ Error SNMP:", undefined, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -59,7 +59,7 @@ router.get("/v3/3", async (req: Request, res: Response) => {
     const result = await snmpService.get(oid);
     res.json({ ip, oid, result });
   } catch (error: any) {
-    console.error("❌ Error SNMP:", error.message);
+    logger.error("❌ Error SNMP:", undefined, error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -84,7 +84,7 @@ router.get("/v3/4", async (req: Request, res: Response) => {
     const result = await snmpService.get(oid);
     res.json({ ip, oid, result });
   } catch (error: any) {
-    console.error("❌ Error SNMP:", error.message);
+    logger.error("❌ Error SNMP:", undefined, error.message);
     res.status(500).json({ error: error.message });
   }
 });

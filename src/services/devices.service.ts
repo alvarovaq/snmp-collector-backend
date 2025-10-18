@@ -1,6 +1,7 @@
 import { Device, OidConfig } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
+import { logger } from "./";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
@@ -11,13 +12,13 @@ export class DevicesService {
     }
 
     private async loadDevices(): Promise<void> {
-        console.log("[DevicesService] Loading devices from BBDD");
+        logger.info("Loading devices from BBDD", "DevicesService");
         const devices = await DevicesDBService.getDevices();
         devices.forEach(device => {
             this.devices.set(device.id, device);
             this.startDevicePolling(device);
         });
-        console.log(`[DevicesService] ${devices.length} devices loaded`);
+        logger.info(`${devices.length} devices loaded`, "DevicesService");
     }
 
     public getDevices(): Device[] {
@@ -35,7 +36,7 @@ export class DevicesService {
         this.devices.set(id, newDevice);
         this.startDevicePolling(newDevice);
 
-        console.log(`[DevicesService] Device added: ${newDevice.name} (ID: ${id})`);
+        logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
         return newDevice;
     }
@@ -46,7 +47,7 @@ export class DevicesService {
 
         this.pollingService.stopDevicePolling(deviceId);
         this.devices.delete(deviceId);
-        console.log(`[DevicesService] Device removed: ${device.name} (ID: ${deviceId})`);
+        logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
     }
 
     private startDevicePolling(device: Device): void {
