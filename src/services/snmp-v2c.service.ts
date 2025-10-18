@@ -1,5 +1,6 @@
 import snmp from "net-snmp";
 import { SnmpResult } from "../models";
+import { getSnmpObjType } from "../utils/snmp.utils";
 
 export class SnmpV2CService {
   private ip: string;
@@ -41,10 +42,10 @@ export class SnmpV2CService {
         }
         
         if (snmp.isVarbindError(vb)) {
-          return resolve({ oid: vb.oid, error: snmp.varbindError(vb) });
+          return resolve({ oid: vb.oid, error: snmp.varbindError(vb), type: getSnmpObjType(vb.type) });
         }
         
-        return resolve({ oid: vb.oid, value: vb.value.toString() });
+        return resolve({ oid: vb.oid, value: vb.value.toString(), type: getSnmpObjType(vb.type) });
       });
     });
   }

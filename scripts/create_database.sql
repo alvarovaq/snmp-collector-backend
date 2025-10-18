@@ -13,7 +13,7 @@ CREATE DATABASE snmp_collector
 CREATE TABLE IF NOT EXISTS public.devices (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS public.devicesconfig (
@@ -37,4 +37,14 @@ CREATE TABLE IF NOT EXISTS public.oids (
     name VARCHAR(100) NOT NULL,
     frequency INT NOT NULL,
     PRIMARY KEY (device_id, oid)
+);
+
+CREATE TABLE IF NOT EXISTS public.records (
+    device_id INT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    oid VARCHAR(255) NOT NULL,
+    value TEXT,
+    error TEXT,
+    type VARCHAR(255) NOT NULL,
+    date TIMESTAMP NOT NULL,
+    PRIMARY KEY (device_id, oid, date)
 );
