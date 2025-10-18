@@ -8,6 +8,7 @@ export * from "./snmp-v3.service";
 export * from "./snmp-polling.service";
 export * from "./devices.service";
 export * from "./oid-records.service";
+export * from "./logger.service";
 
 const oidRecordsService = new OidRecordsService();
 

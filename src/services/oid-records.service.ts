@@ -1,5 +1,6 @@
 import { OidRecord, SnmpResult } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
+import { logger } from "./";
 
 type RecordKey = `${number}-${string}`;
 
@@ -27,9 +28,9 @@ export class OidRecordsService {
 
         const hasValue = result.value !== undefined && result.value !== null;
         if (hasValue) {
-            console.log(`[OidRecordsService] (dev: ${deviceId}) (oid: ${oid}) (upd: ${hasChange}): ${result.value}`);
+            logger.debug(`(dev: ${deviceId}) (oid: ${oid}) (type: ${result.type}) (upd: ${hasChange}): ${result.value}`, "OidRecordsService");
         } else {
-            console.log(`[OidRecordsService] (dev: ${deviceId}) (oid: ${oid}) (upd: ${hasChange}) error: ${result.error}`);
+            logger.debug(`(dev: ${deviceId}) (oid: ${oid}) (type: ${result.type}) (upd: ${hasChange}) error: ${result.error}`, "OidRecordsService");
         }
     }
 

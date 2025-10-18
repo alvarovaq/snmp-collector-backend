@@ -9,5 +9,10 @@ export const env = {
         user: process.env.DB_USER!,
         password: process.env.DB_PASSWORD!,
         name: process.env.DB_NAME!,
+    },
+    log: {
+        toFile: Boolean(process.env.LOG_TO_FILE === "true") || false,
+        dir: process.env.LOG_DIR,
+        level: process.env.LOG_LEVEL || "INFO",
     }
 };
