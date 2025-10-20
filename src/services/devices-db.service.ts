@@ -79,7 +79,7 @@ export class DevicesDBService {
 
         const result = await client.query(
             "INSERT INTO devices (name) VALUES ($1) RETURNING id",
-            [device.id]
+            [device.name]
         );
         const id = result.rows[0].id;
 
@@ -111,5 +111,20 @@ export class DevicesDBService {
     }
 
     return -1;
+  }
+
+  public static async removeDevice(device_id: number): Promise<boolean> {
+    try {
+        const query = `
+            UPDATE devices SET deleted_at = $1 WHERE id = $2 RETURNING *
+        `;
+
+        const { rows } = await pool.query(query, [new Date(), device_id]);
+        return rows.length > 0;
+    } catch (err) {
+        logger.error("Failed to get oids:", "DevicesDBService", err);
+    }
+
+    return false;
   }
 }

@@ -44,13 +44,20 @@ export class DevicesService {
         return newDevice;
     }
 
-    public removeDevice(deviceId: number): void {
+    public async removeDevice(deviceId: number): Promise<boolean> {
         const device = this.devices.get(deviceId);
-        if (!device) return;
+        if (!device)
+            return false;
+
+        const ok = await DevicesDBService.removeDevice(deviceId);
+        if (!ok)
+            return false;
 
         this.pollingService.stopDevicePolling(deviceId);
         this.devices.delete(deviceId);
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
+
+        return true;
     }
 
     private startDevicePolling(device: Device): void {

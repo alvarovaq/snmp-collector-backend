@@ -19,7 +19,6 @@ export class DevicesController {
             const device = devicesService.getDevice(id);
             
             if (!device) {
-                console.log(device);
                 return res.status(400).json();
             }
 
@@ -47,7 +46,9 @@ export class DevicesController {
     public static async remove(req: Request, res: Response) {
         try {
             const id = parseInt(req.params.id);
-            devicesService.removeDevice(id);
+            const ok = await devicesService.removeDevice(id);
+            if (!ok)
+                res.status(404).json();
 
             res.status(200).json();
         } catch (err) {
