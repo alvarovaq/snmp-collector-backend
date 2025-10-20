@@ -15,31 +15,30 @@ export class DevicesDBService {
         `;
 
         const { rows } = await pool.query(query);
-        const devices: Device[] = await Promise.all(
-            rows.map(async (row: any) => {
-                const device: Device = {
-                    id: row.id,
-                    name: row.name,
-                    config: {
-                        ip: row.ip,
-                        port: row.port,
-                        version: row.version as SnmpVersion ?? SnmpVersion.Version2c,
-                        community: row.community,
-                        context: row.context,
-                        security: {
-                            level: row.security_level as SnmpV3SecurityLevel ?? SnmpV3SecurityLevel.NoAuthNoPriv,
-                            user: row.user_name ?? "",
-                            authProtocol: row.auth_protocol as SnmpV3AuthProtocol,
-                            authKey: row.auth_key,
-                            privProtocol: row.priv_protocol as SnmpV3PrivProtocol,
-                            privKey: row.priv_key,
-                        },
+        const devices: Device[] = [];
+        for (const row of rows) {
+            const device: Device = {
+                id: row.id,
+                name: row.name,
+                config: {
+                    ip: row.ip,
+                    port: row.port,
+                    version: row.version as SnmpVersion ?? SnmpVersion.Version2c,
+                    community: row.community,
+                    context: row.context,
+                    security: {
+                        level: row.security_level as SnmpV3SecurityLevel ?? SnmpV3SecurityLevel.NoAuthNoPriv,
+                        user: row.user_name ?? "",
+                        authProtocol: row.auth_protocol as SnmpV3AuthProtocol,
+                        authKey: row.auth_key,
+                        privProtocol: row.priv_protocol as SnmpV3PrivProtocol,
+                        privKey: row.priv_key,
                     },
-                    oids: await this.getOids(row.id),
-                };
-                return device;
-            })
-        );
+                },
+                oids: await this.getOids(row.id),
+            };
+            devices.push(device);
+        }
 
         return devices;
     } catch (err) {
@@ -71,5 +70,46 @@ export class DevicesDBService {
     }
 
     return [];
+  }
+
+  public static async addDevice(device: Device): Promise<number> {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const result = await client.query(
+            "INSERT INTO devices (name) VALUES ($1) RETURNING id",
+            [device.id]
+        );
+        const id = result.rows[0].id;
+
+        if (!id)
+            return -1;
+
+        await client.query(
+            `INSERT INTO devicesconfig (device_id, ip, port, version, community, context, user_name, security_level, auth_protocol, auth_key, priv_protocol, priv_key)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [id, device.config.ip, device.config.port, device.config.version, device.config.community, device.config.context, device.config.security?.user,
+                device.config.security?.level, device.config.security?.authProtocol, device.config.security?.authKey, device.config.security?.privProtocol, device.config.security?.privKey]
+        );
+
+        for (const oid of device.oids) {
+            await client.query(
+                "INSERT INTO oids (device_id, oid, name, frequency) VALUES ($1, $2, $3, $4)",
+                [id, oid.oid, oid.name, oid.frequency]
+            );
+        }
+
+        await client.query("COMMIT");
+
+        return id;
+    } catch (err) {
+        await client.query("ROLLBACK");
+        logger.error("Failed to add device:", "DeviceDBService", err);
+    } finally {
+        client.release();
+    }
+
+    return -1;
   }
 }

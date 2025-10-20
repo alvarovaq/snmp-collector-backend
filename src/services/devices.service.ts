@@ -29,8 +29,11 @@ export class DevicesService {
         return this.devices.get(deviceId);
     }
 
-    public addDevice(device: Device): Device {
-        const id = this.nextId++;
+    public async addDevice(device: Device): Promise<Device | undefined> {
+        const id = await DevicesDBService.addDevice(device);
+        if (id === -1)
+            return undefined;
+
         const newDevice: Device = { ...device, id };
 
         this.devices.set(id, newDevice);
