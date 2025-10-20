@@ -113,6 +113,53 @@ export class DevicesDBService {
     return -1;
   }
 
+  public static async updateDevice(device: Device): Promise<boolean> {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        await client.query(
+            "UPDATE devices SET name = $1 WHERE id = $2",
+            [device.name, device.id]
+        );
+
+        await client.query(
+            "DELETE FROM devicesconfig WHERE device_id = $1",
+            [device.id]
+        );
+
+        await client.query(
+            "DELETE FROM oids WHERE device_id = $1",
+            [device.id]
+        );
+
+        await client.query(
+            `INSERT INTO devicesconfig (device_id, ip, port, version, community, context, user_name, security_level, auth_protocol, auth_key, priv_protocol, priv_key)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [device.id, device.config.ip, device.config.port, device.config.version, device.config.community, device.config.context, device.config.security?.user,
+                device.config.security?.level, device.config.security?.authProtocol, device.config.security?.authKey, device.config.security?.privProtocol, device.config.security?.privKey]
+        );
+
+        for (const oid of device.oids) {
+            await client.query(
+                "INSERT INTO oids (device_id, oid, name, frequency) VALUES ($1, $2, $3, $4)",
+                [device.id, oid.oid, oid.name, oid.frequency]
+            );
+        }
+
+        await client.query("COMMIT");
+
+        return true;
+    } catch (err) {
+        await client.query("ROLLBACK");
+        logger.error("Failed to add device:", "DeviceDBService", err);
+    } finally {
+        client.release();
+    }
+
+    return false;
+  }
+
   public static async removeDevice(device_id: number): Promise<boolean> {
     try {
         const query = `

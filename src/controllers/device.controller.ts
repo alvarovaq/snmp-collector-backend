@@ -43,6 +43,20 @@ export class DevicesController {
         }
     }
 
+    public static async update(req: Request, res: Response) {
+        try {
+            const device: Device = req.body;
+
+            const updDevice = await devicesService.updateDevice(device);
+            if (!updDevice)
+                return res.status(400).json();
+            return res.status(200).json(updDevice);
+        } catch (err) {
+            logger.error("Failed to update device", "DeviceController", err);
+            res.status(500).json();
+        }
+    }
+
     public static async remove(req: Request, res: Response) {
         try {
             const id = parseInt(req.params.id);

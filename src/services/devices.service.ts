@@ -44,6 +44,22 @@ export class DevicesService {
         return newDevice;
     }
 
+    public async updateDevice(device: Device): Promise<Device | undefined> {
+        if (!this.devices.get(device.id))
+            return undefined;
+
+        const ok = await DevicesDBService.updateDevice(device);
+        if (!ok)
+            return undefined;
+
+        this.devices.set(device.id, device);
+        this.pollingService.stopDevicePolling(device.id);
+        this.startDevicePolling(device);
+
+        logger.info(`Device updated: ${device.name} (ID: ${device.id})`, "DevicesService");
+        return device;
+    }
+
     public async removeDevice(deviceId: number): Promise<boolean> {
         const device = this.devices.get(deviceId);
         if (!device)
