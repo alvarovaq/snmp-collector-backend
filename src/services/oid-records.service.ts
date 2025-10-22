@@ -1,6 +1,7 @@
-import { OidRecord, SnmpResult } from "../models";
+import { OidRecord, OidRecordID, SnmpResult, WSEvent, WSMessage } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
 import { logger } from "./logger.service";
+import { WebSocketService } from "./websocket.service";
 
 type RecordKey = `${number}-${string}`;
 
@@ -24,6 +25,13 @@ export class OidRecordsService {
             
             this.records.set(key, record);
             OidRecordsDBService.addRecord(record);
+
+            const msg: WSMessage = {
+                event: WSEvent.UpdateRecord,
+                data: record
+            }
+            WebSocketService.broadcast(msg);
+            console.log(msg);
         }
 
         const hasValue = result.value !== undefined && result.value !== null;
@@ -51,6 +59,15 @@ export class OidRecordsService {
         for (const [key, record] of this.records.entries()) {
             if (record.deviceId === deviceId) {
                 this.records.delete(key);
+                
+                const msg: WSMessage = {
+                    event: WSEvent.RemoveRecord,
+                    data: {
+                        deviceId: record.deviceId,
+                        oid: record.oid
+                    } as OidRecordID
+                }
+                WebSocketService.broadcast(msg);
             }
         }
     }
