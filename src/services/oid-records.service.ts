@@ -1,6 +1,7 @@
 import { OidRecord, SnmpResult } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
 import { logger } from "./logger.service";
+import { WebSocketService } from "./websocket.service";
 
 type RecordKey = `${number}-${string}`;
 
@@ -24,6 +25,11 @@ export class OidRecordsService {
             
             this.records.set(key, record);
             OidRecordsDBService.addRecord(record);
+
+            WebSocketService.broadcast({
+                type: "UpdateRecord",
+                data: record
+            });
         }
 
         const hasValue = result.value !== undefined && result.value !== null;
