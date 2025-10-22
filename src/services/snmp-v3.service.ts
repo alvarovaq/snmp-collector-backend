@@ -56,7 +56,7 @@ export class SnmpV3Service {
     this.session = snmp.createV3Session(this.ip, user, options);
   }
 
-  public async get(oid: string): Promise<SnmpResult> {
+  public async get(oids: string[]): Promise<SnmpResult[]> {
     return new Promise((resolve, reject) => {
       this.createSession();
 
@@ -64,23 +64,23 @@ export class SnmpV3Service {
         return reject(new Error("No se pudo crear la sesión SNMP"));
       }
 
-      this.session.get([oid], (error: Error | null, varbinds: snmp.Varbind[]) => {
+      this.session.get(oids, (error: Error | null, varbinds: snmp.Varbind[]) => {
         this.close();
         
         if (error) {
           return reject(error);
         }
 
-        const vb = varbinds?.[0];
-        if (!vb) {
-          return reject(new Error("No varbinds returned"));
+        const results: SnmpResult[] = [];
+        for (const vb of varbinds) {
+          if (snmp.isVarbindError(vb)) {
+            results.push({ oid: vb.oid, error: snmp.varbindError(vb), type: getSnmpObjType(vb.type) });
+          }
+          
+          results.push({ oid: vb.oid, value: vb.value.toString(), type: getSnmpObjType(vb.type) });
         }
-        
-        if (snmp.isVarbindError(vb)) {
-          return resolve({ oid: vb.oid, error: snmp.varbindError(vb), type: getSnmpObjType(vb.type) });
-        }
-        
-        return resolve({ oid: vb.oid, value: vb.value.toString(), type: getSnmpObjType(vb.type) });
+
+        return resolve(results);
       });
     });
   }

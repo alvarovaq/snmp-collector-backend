@@ -5,7 +5,6 @@ import { logger } from "./logger.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
-    private nextId = 0;
 
     constructor(private readonly pollingService: SnmpPollingService) {
         this.loadDevices();
@@ -16,7 +15,7 @@ export class DevicesService {
         const devices = await DevicesDBService.getDevices();
         devices.forEach(device => {
             this.devices.set(device.id, device);
-            this.startDevicePolling(device);
+            this.pollingService.startOidsPolling(device.id, device.config, device.oids);
         });
         logger.info(`${devices.length} devices loaded`, "DevicesService");
     }
@@ -37,7 +36,7 @@ export class DevicesService {
         const newDevice: Device = { ...device, id };
 
         this.devices.set(id, newDevice);
-        this.startDevicePolling(newDevice);
+        this.pollingService.startOidsPolling(device.id, device.config, device.oids);
 
         logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
@@ -54,7 +53,7 @@ export class DevicesService {
 
         this.devices.set(device.id, device);
         this.pollingService.stopDevicePolling(device.id);
-        this.startDevicePolling(device);
+        this.pollingService.startOidsPolling(device.id, device.config, device.oids);
 
         logger.info(`Device updated: ${device.name} (ID: ${device.id})`, "DevicesService");
         return device;
@@ -74,11 +73,5 @@ export class DevicesService {
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
 
         return true;
-    }
-
-    private startDevicePolling(device: Device): void {
-        device.oids.forEach((oidConf: OidConfig) => {
-            this.pollingService.startOidPolling(device.id, oidConf.oid, device.config, oidConf.frequency);
-        });       
     }
 }

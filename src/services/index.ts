@@ -10,8 +10,8 @@ export * from "./logger.service";
 
 const oidRecordsService = new OidRecordsService();
 
-const onNewValue: SnmpPollingCallback = (deviceId: number, oid: string, result: SnmpResult): void => {
-    oidRecordsService.setValue(deviceId, oid, result);
+const onNewValue: SnmpPollingCallback = (deviceId: number, result: SnmpResult): void => {
+    oidRecordsService.setValue(deviceId, result);
 };
 
 const snmpPollingService = new SnmpPollingService(onNewValue);
