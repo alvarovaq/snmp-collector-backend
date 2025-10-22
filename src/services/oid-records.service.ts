@@ -1,21 +1,21 @@
 import { OidRecord, SnmpResult } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
-import { logger } from "./";
+import { logger } from "./logger.service";
 
 type RecordKey = `${number}-${string}`;
 
 export class OidRecordsService {
     private records: Map<RecordKey, OidRecord> = new Map();
 
-    public setValue(deviceId: number, oid: string, result: SnmpResult): void {
-        const key = this.makeRecordKey(deviceId, oid);
+    public setValue(deviceId: number, result: SnmpResult): void {
+        const key = this.makeRecordKey(deviceId, result.oid);
 
         const lastRecord = this.records.get(key);
         const hasChange = !lastRecord || lastRecord.value !== result.value || lastRecord.error !== result.error;
         if (hasChange) {
             const record: OidRecord = {
                 deviceId,
-                oid,
+                oid: result.oid,
                 value: result.value,
                 error: result.error,
                 type: result.type,
@@ -28,9 +28,9 @@ export class OidRecordsService {
 
         const hasValue = result.value !== undefined && result.value !== null;
         if (hasValue) {
-            logger.debug(`(dev: ${deviceId}) (oid: ${oid}) (type: ${result.type}) (upd: ${hasChange}): ${result.value}`, "OidRecordsService");
+            logger.debug(`(dev: ${deviceId}) (oid: ${result.oid}) (type: ${result.type}) (upd: ${hasChange}): ${result.value}`, "OidRecordsService");
         } else {
-            logger.debug(`(dev: ${deviceId}) (oid: ${oid}) (type: ${result.type}) (upd: ${hasChange}) error: ${result.error}`, "OidRecordsService");
+            logger.debug(`(dev: ${deviceId}) (oid: ${result.oid}) (type: ${result.type}) (upd: ${hasChange}) error: ${result.error}`, "OidRecordsService");
         }
     }
 
@@ -45,6 +45,14 @@ export class OidRecordsService {
 
     public getAll(): OidRecord[] {
         return Array.from(this.records.values());
+    }
+
+    public cleanDeviceValues(deviceId: number): void {
+        for (const [key, record] of this.records.entries()) {
+            if (record.deviceId === deviceId) {
+                this.records.delete(key);
+            }
+        }
     }
 
     private makeRecordKey(deviceId: number, oid: string): RecordKey {

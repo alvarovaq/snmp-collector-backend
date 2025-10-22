@@ -1,13 +1,16 @@
-import { Device, OidConfig } from "../models";
+import { Device } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
-import { logger } from "./";
+import { logger } from "./logger.service";
+import { OidRecordsService } from "./oid-records.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
-    private nextId = 0;
 
-    constructor(private readonly pollingService: SnmpPollingService) {
+    constructor(
+        private readonly pollingService: SnmpPollingService,
+        private readonly oidRecordsService: OidRecordsService
+    ) {
         this.loadDevices();
     }
 
@@ -16,7 +19,7 @@ export class DevicesService {
         const devices = await DevicesDBService.getDevices();
         devices.forEach(device => {
             this.devices.set(device.id, device);
-            this.startDevicePolling(device);
+            this.pollingService.startOidsPolling(device.id, device.config, device.oids);
         });
         logger.info(`${devices.length} devices loaded`, "DevicesService");
     }
@@ -29,30 +32,52 @@ export class DevicesService {
         return this.devices.get(deviceId);
     }
 
-    public addDevice(device: Device): Device {
-        const id = this.nextId++;
+    public async addDevice(device: Device): Promise<Device | undefined> {
+        const id = await DevicesDBService.addDevice(device);
+        if (id === -1)
+            return undefined;
+
         const newDevice: Device = { ...device, id };
 
         this.devices.set(id, newDevice);
-        this.startDevicePolling(newDevice);
+        this.pollingService.startOidsPolling(newDevice.id, newDevice.config, newDevice.oids);
 
         logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
         return newDevice;
     }
 
-    public removeDevice(deviceId: number): void {
+    public async updateDevice(device: Device): Promise<Device | undefined> {
+        if (!this.devices.get(device.id))
+            return undefined;
+
+        const ok = await DevicesDBService.updateDevice(device);
+        if (!ok)
+            return undefined;
+
+        this.devices.set(device.id, device);
+        this.pollingService.stopDevicePolling(device.id);
+        this.oidRecordsService.cleanDeviceValues(device.id);
+        this.pollingService.startOidsPolling(device.id, device.config, device.oids);
+
+        logger.info(`Device updated: ${device.name} (ID: ${device.id})`, "DevicesService");
+        return device;
+    }
+
+    public async removeDevice(deviceId: number): Promise<boolean> {
         const device = this.devices.get(deviceId);
-        if (!device) return;
+        if (!device)
+            return false;
+
+        const ok = await DevicesDBService.removeDevice(deviceId);
+        if (!ok)
+            return false;
 
         this.pollingService.stopDevicePolling(deviceId);
         this.devices.delete(deviceId);
+        this.oidRecordsService.cleanDeviceValues(deviceId);
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
-    }
 
-    private startDevicePolling(device: Device): void {
-        device.oids.forEach((oidConf: OidConfig) => {
-            this.pollingService.startOidPolling(device.id, oidConf.oid, device.config, oidConf.frequency);
-        });       
+        return true;
     }
 }
