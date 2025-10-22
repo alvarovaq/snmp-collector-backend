@@ -15,7 +15,7 @@ export class DevicesController {
     
     public static async get(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.query.id as string);
             const device = devicesService.getDevice(id);
             
             if (!device) {
@@ -59,7 +59,7 @@ export class DevicesController {
 
     public static async remove(req: Request, res: Response) {
         try {
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.query.id as string);
             const ok = await devicesService.removeDevice(id);
             if (!ok)
                 res.status(404).json();

@@ -36,7 +36,7 @@ export class DevicesService {
         const newDevice: Device = { ...device, id };
 
         this.devices.set(id, newDevice);
-        this.pollingService.startOidsPolling(device.id, device.config, device.oids);
+        this.pollingService.startOidsPolling(newDevice.id, newDevice.config, newDevice.oids);
 
         logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
