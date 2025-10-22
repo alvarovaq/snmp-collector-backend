@@ -1,4 +1,4 @@
-import { OidRecord, SnmpResult, WSEvent, WSMessage } from "../models";
+import { OidRecord, OidRecordID, SnmpResult, WSEvent, WSMessage } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
 import { logger } from "./logger.service";
 import { WebSocketService } from "./websocket.service";
@@ -59,6 +59,15 @@ export class OidRecordsService {
         for (const [key, record] of this.records.entries()) {
             if (record.deviceId === deviceId) {
                 this.records.delete(key);
+                
+                const msg: WSMessage = {
+                    event: WSEvent.RemoveRecord,
+                    data: {
+                        deviceId: record.deviceId,
+                        oid: record.oid
+                    } as OidRecordID
+                }
+                WebSocketService.broadcast(msg);
             }
         }
     }

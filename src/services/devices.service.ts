@@ -1,8 +1,9 @@
-import { Device } from "../models";
+import { Device, WSEvent, WSMessage } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
 import { logger } from "./logger.service";
 import { OidRecordsService } from "./oid-records.service";
+import { WebSocketService } from "./websocket.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
@@ -42,6 +43,12 @@ export class DevicesService {
         this.devices.set(id, newDevice);
         this.pollingService.startOidsPolling(newDevice.id, newDevice.config, newDevice.oids);
 
+        const msg: WSMessage = {
+            event: WSEvent.UpdateDevice,
+            data: newDevice
+        };
+        WebSocketService.broadcast(msg);
+
         logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
         return newDevice;
@@ -56,6 +63,12 @@ export class DevicesService {
             return undefined;
 
         this.devices.set(device.id, device);
+        const msg: WSMessage = {
+            event: WSEvent.UpdateDevice,
+            data: device
+        };
+        WebSocketService.broadcast(msg);
+
         this.pollingService.stopDevicePolling(device.id);
         this.oidRecordsService.cleanDeviceValues(device.id);
         this.pollingService.startOidsPolling(device.id, device.config, device.oids);
@@ -76,6 +89,13 @@ export class DevicesService {
         this.pollingService.stopDevicePolling(deviceId);
         this.devices.delete(deviceId);
         this.oidRecordsService.cleanDeviceValues(deviceId);
+
+        const msg: WSMessage = {
+            event: WSEvent.RemoveDevice,
+            data: deviceId
+        };
+        WebSocketService.broadcast(msg);
+
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
 
         return true;
