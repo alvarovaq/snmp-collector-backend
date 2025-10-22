@@ -47,6 +47,14 @@ export class OidRecordsService {
         return Array.from(this.records.values());
     }
 
+    public cleanDeviceValues(deviceId: number): void {
+        for (const [key, record] of this.records.entries()) {
+            if (record.deviceId === deviceId) {
+                this.records.delete(key);
+            }
+        }
+    }
+
     private makeRecordKey(deviceId: number, oid: string): RecordKey {
         return `${deviceId}-${oid}`;
     }

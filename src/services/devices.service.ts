@@ -1,12 +1,16 @@
-import { Device, OidConfig } from "../models";
+import { Device } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
 import { logger } from "./logger.service";
+import { OidRecordsService } from "./oid-records.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
 
-    constructor(private readonly pollingService: SnmpPollingService) {
+    constructor(
+        private readonly pollingService: SnmpPollingService,
+        private readonly oidRecordsService: OidRecordsService
+    ) {
         this.loadDevices();
     }
 
@@ -53,6 +57,7 @@ export class DevicesService {
 
         this.devices.set(device.id, device);
         this.pollingService.stopDevicePolling(device.id);
+        this.oidRecordsService.cleanDeviceValues(device.id);
         this.pollingService.startOidsPolling(device.id, device.config, device.oids);
 
         logger.info(`Device updated: ${device.name} (ID: ${device.id})`, "DevicesService");
@@ -70,6 +75,7 @@ export class DevicesService {
 
         this.pollingService.stopDevicePolling(deviceId);
         this.devices.delete(deviceId);
+        this.oidRecordsService.cleanDeviceValues(deviceId);
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
 
         return true;

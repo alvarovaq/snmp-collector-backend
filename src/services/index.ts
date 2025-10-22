@@ -15,7 +15,7 @@ const onNewValue: SnmpPollingCallback = (deviceId: number, result: SnmpResult): 
 };
 
 const snmpPollingService = new SnmpPollingService(onNewValue);
-const devicesService = new DevicesService(snmpPollingService);
+const devicesService = new DevicesService(snmpPollingService, oidRecordsService);
 
 export {
     devicesService,
