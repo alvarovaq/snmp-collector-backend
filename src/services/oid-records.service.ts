@@ -1,4 +1,4 @@
-import { OidRecord, SnmpResult } from "../models";
+import { OidRecord, SnmpResult, WSEvent, WSMessage } from "../models";
 import { OidRecordsDBService } from "./oid-records-db.service";
 import { logger } from "./logger.service";
 import { WebSocketService } from "./websocket.service";
@@ -26,10 +26,12 @@ export class OidRecordsService {
             this.records.set(key, record);
             OidRecordsDBService.addRecord(record);
 
-            WebSocketService.broadcast({
-                type: "UpdateRecord",
+            const msg: WSMessage = {
+                event: WSEvent.UpdateRecord,
                 data: record
-            });
+            }
+            WebSocketService.broadcast(msg);
+            console.log(msg);
         }
 
         const hasValue = result.value !== undefined && result.value !== null;

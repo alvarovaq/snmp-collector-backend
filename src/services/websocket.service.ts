@@ -1,5 +1,6 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { Server } from "http";
+import { WSMessage } from "../models";
 
 export class WebSocketService {
   private static wss: WebSocketServer;
@@ -22,10 +23,10 @@ export class WebSocketService {
     console.log("[WebSocket] Server started");
   }
   
-  public static broadcast(data: any): void {
+  public static broadcast(msg: WSMessage): void {
     if (!this.wss) return;
 
-    const message = JSON.stringify(data);
+    const message = JSON.stringify(msg);
     for (const client of this.wss.clients) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
@@ -33,9 +34,9 @@ export class WebSocketService {
     }
   }
   
-  public static sendToClient(ws: WebSocket, data: any): void {
+  public static sendToClient(ws: WebSocket, msg: WSMessage): void {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(data));
+      ws.send(JSON.stringify(msg));
     }
   }
 }
