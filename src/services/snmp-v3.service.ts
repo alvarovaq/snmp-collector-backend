@@ -75,9 +75,9 @@ export class SnmpV3Service {
         for (const vb of varbinds) {
           if (snmp.isVarbindError(vb)) {
             results.push({ oid: vb.oid, error: snmp.varbindError(vb), type: getSnmpObjType(vb.type) });
+          } else {
+            results.push({ oid: vb.oid, value: vb.value.toString(), type: getSnmpObjType(vb.type) });
           }
-          
-          results.push({ oid: vb.oid, value: vb.value.toString(), type: getSnmpObjType(vb.type) });
         }
 
         return resolve(results);
