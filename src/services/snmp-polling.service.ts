@@ -65,9 +65,7 @@ export class SnmpPollingService
     private async requestOids(deviceId: number, deviceConfig: DeviceConfig, oids: string[]): Promise<void> {
         try {
             const results = await this.getResults(deviceConfig, oids);
-            for (const result of results) {
-                this.oidRecordsService.setValue(deviceId, result);
-            }
+            this.oidRecordsService.setValues(deviceId, results);
         } catch (err) {
             logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err);
         }
