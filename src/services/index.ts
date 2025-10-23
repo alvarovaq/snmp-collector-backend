@@ -10,7 +10,7 @@ export * from "./logger.service";
 
 const oidRecordsService = new OidRecordsService();
 const snmpPollingService = new SnmpPollingService(oidRecordsService);
-const devicesService = new DevicesService(snmpPollingService, oidRecordsService);
+const devicesService = new DevicesService(snmpPollingService);
 
 export {
     devicesService,

@@ -18,23 +18,13 @@ export class SnmpPollingService
 
     constructor(private readonly oidRecordsService: OidRecordsService) {}
 
-    public startOidsPolling(deviceId: number, deviceConfig: DeviceConfig, oidsConfig: OidConfig[]): void {
+    public startDevicePolling(device: Device): void {
         (async () => {
-            await this.requestOids(deviceId, deviceConfig, oidsConfig.map(oidConfig => oidConfig.oid));
-            for (const oidConfig of oidsConfig) {
-                this.startPolling(deviceId, oidConfig.oid, deviceConfig, oidConfig.frequency);
+            await this.requestOids(device.id, device.config, device.oids.map(oidConfig => oidConfig.oid));
+            for (const oidConfig of device.oids) {
+                this.startPolling(device.id, oidConfig.oid, device.config, oidConfig.frequency);
             }
         })().catch(err => logger.error("Error starting OID polling:", "SnmpPollingService", err));
-    }
-
-    public stopOidPolling(deviceId: number, oid: string): void {
-        const key = this.makeIntervalKey(deviceId, oid);
-        const info = this.intervals.get(key);
-
-        if (info) {
-            clearInterval(info.interval);
-            this.intervals.delete(key);
-        }
     }
 
     public stopDevicePolling(deviceId: number): void {
@@ -44,6 +34,12 @@ export class SnmpPollingService
                 this.intervals.delete(key);
             }
         }
+        this.oidRecordsService.cleanDeviceValues(deviceId);
+    }
+
+    public restartDevicePolling(device: Device): void {
+        this.stopDevicePolling(device.id);
+        this.startDevicePolling(device);
     }
 
     public stopAll(): void {
