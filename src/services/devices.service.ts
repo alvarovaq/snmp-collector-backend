@@ -2,16 +2,12 @@ import { Device, WSEvent, WSMessage } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
 import { logger } from "./logger.service";
-import { OidRecordsService } from "./oid-records.service";
 import { WebSocketService } from "./websocket.service";
 
 export class DevicesService {
     private devices: Map<number, Device> = new Map();
 
-    constructor(
-        private readonly pollingService: SnmpPollingService,
-        private readonly oidRecordsService: OidRecordsService
-    ) {
+    constructor(private readonly pollingService: SnmpPollingService) {
         this.loadDevices();
     }
 
@@ -20,7 +16,7 @@ export class DevicesService {
         const devices = await DevicesDBService.getDevices();
         devices.forEach(device => {
             this.devices.set(device.id, device);
-            this.pollingService.startOidsPolling(device.id, device.config, device.oids);
+            this.pollingService.startDevicePolling(device);
         });
         logger.info(`${devices.length} devices loaded`, "DevicesService");
     }
@@ -41,13 +37,14 @@ export class DevicesService {
         const newDevice: Device = { ...device, id };
 
         this.devices.set(id, newDevice);
-        this.pollingService.startOidsPolling(newDevice.id, newDevice.config, newDevice.oids);
 
         const msg: WSMessage = {
             event: WSEvent.UpdateDevice,
             data: newDevice
         };
         WebSocketService.broadcast(msg);
+
+        this.pollingService.startDevicePolling(newDevice);
 
         logger.info(`Device added: ${newDevice.name} (ID: ${id})`, "DevicesService");
 
@@ -69,9 +66,7 @@ export class DevicesService {
         };
         WebSocketService.broadcast(msg);
 
-        this.pollingService.stopDevicePolling(device.id);
-        this.oidRecordsService.cleanDeviceValues(device.id);
-        this.pollingService.startOidsPolling(device.id, device.config, device.oids);
+        this.pollingService.restartDevicePolling(device);
 
         logger.info(`Device updated: ${device.name} (ID: ${device.id})`, "DevicesService");
         return device;
@@ -87,8 +82,8 @@ export class DevicesService {
             return false;
 
         this.pollingService.stopDevicePolling(deviceId);
+
         this.devices.delete(deviceId);
-        this.oidRecordsService.cleanDeviceValues(deviceId);
 
         const msg: WSMessage = {
             event: WSEvent.RemoveDevice,

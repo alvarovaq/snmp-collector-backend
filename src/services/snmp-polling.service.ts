@@ -1,9 +1,8 @@
-import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion } from "../models";
+import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion, Device, SnmpObjType } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
 import { logger } from "./logger.service";
-
-export type SnmpPollingCallback = (deviceId: number, result: SnmpResult) => void;
+import { OidRecordsService } from "./oid-records.service";
 
 type IntervalKey = `${number}-${string}`;
 
@@ -17,25 +16,15 @@ export class SnmpPollingService
 {
     private intervals: Map<IntervalKey, IntervalInfo> = new Map();
 
-    constructor(private readonly onResult?: SnmpPollingCallback) {}
+    constructor(private readonly oidRecordsService: OidRecordsService) {}
 
-    public startOidsPolling(deviceId: number, deviceConfig: DeviceConfig, oidsConfig: OidConfig[]): void {
+    public startDevicePolling(device: Device): void {
         (async () => {
-            await this.requestOids(deviceId, deviceConfig, oidsConfig.map(oidConfig => oidConfig.oid));
-            for (const oidConfig of oidsConfig) {
-                this.startPolling(deviceId, oidConfig.oid, deviceConfig, oidConfig.frequency);
+            await this.requestOids(device.id, device.config, device.oids.map(oidConfig => oidConfig.oid));
+            for (const oidConfig of device.oids) {
+                this.startPolling(device.id, oidConfig.oid, device.config, oidConfig.frequency);
             }
         })().catch(err => logger.error("Error starting OID polling:", "SnmpPollingService", err));
-    }
-
-    public stopOidPolling(deviceId: number, oid: string): void {
-        const key = this.makeIntervalKey(deviceId, oid);
-        const info = this.intervals.get(key);
-
-        if (info) {
-            clearInterval(info.interval);
-            this.intervals.delete(key);
-        }
     }
 
     public stopDevicePolling(deviceId: number): void {
@@ -45,6 +34,12 @@ export class SnmpPollingService
                 this.intervals.delete(key);
             }
         }
+        this.oidRecordsService.cleanDeviceValues(deviceId);
+    }
+
+    public restartDevicePolling(device: Device): void {
+        this.stopDevicePolling(device.id);
+        this.startDevicePolling(device);
     }
 
     public stopAll(): void {
@@ -70,11 +65,19 @@ export class SnmpPollingService
     private async requestOids(deviceId: number, deviceConfig: DeviceConfig, oids: string[]): Promise<void> {
         try {
             const results = await this.getResults(deviceConfig, oids);
-            for (const result of results) {
-                this.onResult?.(deviceId, result);
+            this.oidRecordsService.setValues(deviceId, results);
+        } catch (err: any) {
+            logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err.name);
+            
+            const results: SnmpResult[] = [];
+            for (const oid of oids) {
+                results.push({
+                    oid,
+                    type: SnmpObjType.Error,
+                    error: err.name
+                } as SnmpResult);
             }
-        } catch (err) {
-            logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err);
+            this.oidRecordsService.setValues(deviceId, results);
         }
     }
 
