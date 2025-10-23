@@ -14,6 +14,7 @@ export enum SnmpObjType {
   NoSuchObject = "NoSuchObject",
   NoSuchInstance = "NoSuchInstance",
   EndOfMibView = "EndOfMibView",
+  Error = "Error",
 }
 
 export interface SnmpResult {

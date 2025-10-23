@@ -1,4 +1,4 @@
-import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion, Device } from "../models";
+import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion, Device, SnmpObjType } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
 import { logger } from "./logger.service";
@@ -66,8 +66,18 @@ export class SnmpPollingService
         try {
             const results = await this.getResults(deviceConfig, oids);
             this.oidRecordsService.setValues(deviceId, results);
-        } catch (err) {
-            logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err);
+        } catch (err: any) {
+            logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err.name);
+            
+            const results: SnmpResult[] = [];
+            for (const oid of oids) {
+                results.push({
+                    oid,
+                    type: SnmpObjType.Error,
+                    error: err.name
+                } as SnmpResult);
+            }
+            this.oidRecordsService.setValues(deviceId, results);
         }
     }
 
