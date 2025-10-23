@@ -1,9 +1,8 @@
-import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion } from "../models";
+import { DeviceConfig, OidConfig, SnmpResult, SnmpVersion, Device } from "../models";
 import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
 import { logger } from "./logger.service";
-
-export type SnmpPollingCallback = (deviceId: number, result: SnmpResult) => void;
+import { OidRecordsService } from "./oid-records.service";
 
 type IntervalKey = `${number}-${string}`;
 
@@ -17,7 +16,7 @@ export class SnmpPollingService
 {
     private intervals: Map<IntervalKey, IntervalInfo> = new Map();
 
-    constructor(private readonly onResult?: SnmpPollingCallback) {}
+    constructor(private readonly oidRecordsService: OidRecordsService) {}
 
     public startOidsPolling(deviceId: number, deviceConfig: DeviceConfig, oidsConfig: OidConfig[]): void {
         (async () => {
@@ -71,7 +70,7 @@ export class SnmpPollingService
         try {
             const results = await this.getResults(deviceConfig, oids);
             for (const result of results) {
-                this.onResult?.(deviceId, result);
+                this.oidRecordsService.setValue(deviceId, result);
             }
         } catch (err) {
             logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err);

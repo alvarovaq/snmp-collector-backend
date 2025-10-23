@@ -31,7 +31,6 @@ export class OidRecordsService {
                 data: record
             }
             WebSocketService.broadcast(msg);
-            console.log(msg);
         }
 
         const hasValue = result.value !== undefined && result.value !== null;
