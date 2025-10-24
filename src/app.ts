@@ -1,11 +1,19 @@
 import express from "express";
+import cors from "cors";
+import http from "http";
 import devicesRouter from "./routes/devices.routes";
 import oidRecordsRouter from "./routes/oid-records.routes";
-import http from "http";
 import { env } from "./config/env";
 import { WebSocketService } from "./services/websocket.service";
 
 const app = express();
+
+app.use(
+    cors({
+        origin: "*"
+    })
+);
+
 app.use(express.json());
 
 // Ruta base
