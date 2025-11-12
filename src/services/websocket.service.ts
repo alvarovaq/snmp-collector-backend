@@ -1,6 +1,7 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { Server } from "http";
 import { WSMessage } from "../models";
+import { logger } from "./logger.service";
 
 export class WebSocketService {
   private static wss: WebSocketServer;
@@ -9,18 +10,18 @@ export class WebSocketService {
     this.wss = new WebSocketServer({ server });
 
     this.wss.on("connection", (ws: WebSocket) => {
-      console.log("[WebSocket] Client connected");
+      logger.info("Client connected", "WebSocket");
 
       ws.on("message", (message) => {
-        console.log("[WebSocket] Received:", message.toString());
+        logger.info(`Received: ${message.toString()}`, "WebSocket");
       });
 
       ws.on("close", () => {
-        console.log("[WebSocket] Client disconnected");
+        logger.info("Client disconnected", "WebSocket");
       });
     });
 
-    console.log("[WebSocket] Server started");
+    logger.info("Server started", "WebSocket");
   }
   
   public static broadcast(msg: WSMessage): void {

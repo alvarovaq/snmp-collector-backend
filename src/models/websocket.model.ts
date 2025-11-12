@@ -3,10 +3,10 @@ export enum WSEvent {
     RemoveRecords = "RemoveRecords",
     UpdateDevice = "UpdateDevice",
     RemoveDevice = "RemoveDevice",
-    Other = "Other"
+    Other = "Other",
 }
 
 export interface WSMessage {
     event: WSEvent;
-    data: any
+    data: any;
 }

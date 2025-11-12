@@ -14,5 +14,8 @@ export const env = {
         toFile: Boolean(process.env.LOG_TO_FILE === "true") || false,
         dir: process.env.LOG_DIR,
         level: process.env.LOG_LEVEL || "INFO",
+    },
+    snmp: {
+        port: Number(process.env.SNMP_PORT),
     }
 };
