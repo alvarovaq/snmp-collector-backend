@@ -48,3 +48,11 @@ CREATE TABLE IF NOT EXISTS public.records (
     date TIMESTAMP NOT NULL,
     PRIMARY KEY (device_id, oid, date)
 );
+
+CREATE TABLE IF NOT EXISTS public.users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(50) NOT NULL,
+    deleted_at TIMESTAMP
+);
