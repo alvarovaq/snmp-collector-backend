@@ -105,7 +105,7 @@ export class DevicesDBService {
         return id;
     } catch (err) {
         await client.query("ROLLBACK");
-        logger.error("Failed to add device:", "DeviceDBService", err);
+        logger.error("Failed to add device:", "DevicesDBService", err);
     } finally {
         client.release();
     }
@@ -152,7 +152,7 @@ export class DevicesDBService {
         return true;
     } catch (err) {
         await client.query("ROLLBACK");
-        logger.error("Failed to add device:", "DeviceDBService", err);
+        logger.error("Failed to update device:", "DevicesDBService", err);
     } finally {
         client.release();
     }
@@ -169,7 +169,7 @@ export class DevicesDBService {
         const { rows } = await pool.query(query, [new Date(), device_id]);
         return rows.length > 0;
     } catch (err) {
-        logger.error("Failed to get oids:", "DevicesDBService", err);
+        logger.error("Failed to remove device:", "DevicesDBService", err);
     }
 
     return false;

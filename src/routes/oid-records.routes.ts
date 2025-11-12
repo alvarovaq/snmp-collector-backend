@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { OidRecordsController } from "../controllers/oid-records.controller";
+import { OidRecordsController } from "../controllers";
 
 const router = Router();
 
