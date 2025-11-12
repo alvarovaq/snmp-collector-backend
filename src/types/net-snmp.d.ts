@@ -100,10 +100,6 @@ declare module "net-snmp" {
 
   export interface Receiver extends EventEmmiter {
     close(callback?: () => void): void;
-    on(event: "listening", listener: () => void): this;
-    on(event: "error", listener: (err: Error) => void): this;
-    on(event: "trap", listener: (msg: Buffer, rinfo: any) => void): this;
-    on(event: string | symbol, listener: (...args: any[]) => void): this;
   }
 
   export function createReceiver(options: ReceiverOptions, callback: (error: Error | null, notification: Notification) => void): Receiver;
