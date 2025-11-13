@@ -5,7 +5,7 @@ import { User } from "../models";
 import { AuthDBService } from "./auth-db.service";
 
 export class AuthService {
-    public async add(user: User): Promise<boolean> {
+    public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
         return await AuthDBService.add(user.id, hash);

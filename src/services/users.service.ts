@@ -21,7 +21,7 @@ export class UsersService {
             return undefined;
 
         const newUser: User = { ...user, id };
-        this.authenticationService.add(newUser);
+        this.authenticationService.addAuth(newUser);
 
         logger.info(`User added: ${user.email} (ID: ${id})`, "UsersService");
 

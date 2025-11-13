@@ -60,6 +60,9 @@ export class UsersDBService {
   }
 
   public static async addUser(user: User): Promise<number> {
+    if (await this.checkEmail(user.email, -1))
+        return -1;
+
     try {
         const result = await pool.query(
             "INSERT INTO users (name, email, role) VALUES ($1, $2, $3) RETURNING id",
@@ -79,6 +82,9 @@ export class UsersDBService {
   }
 
   public static async updateUser(user: User): Promise<boolean> {
+    if (await this.checkEmail(user.email, user.id))
+        return false;
+
     try {
         await pool.query(
             "UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4",
@@ -106,5 +112,24 @@ export class UsersDBService {
     }
 
     return false;
+  }
+
+  public static async checkEmail(email: string, id: number): Promise<boolean> {
+    try {
+        const query = `
+            SELECT 1
+            FROM users
+            WHERE LOWER(email) = LOWER($1)
+            AND id <> $2
+            AND deleted_at IS NULL
+            LIMIT 1
+        `;
+
+        const { rows } = await pool.query(query, [email, id]);
+        return rows.length > 0;
+    } catch (err) {
+        logger.error("Failed to check email:", "UsersDBService", err);
+        return false;
+    }
   }
 }
