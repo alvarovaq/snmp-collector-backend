@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS public.records (
 CREATE TABLE IF NOT EXISTS public.users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL,
     deleted_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.usersauth (
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    password VARCHAR(255) NOT NULL
 );

@@ -1,9 +1,17 @@
 import generator from "generate-password";
 import bcrypt from "bcrypt";
 import { logger } from "./logger.service";
+import { User } from "../models";
+import { AuthenticationDBService } from "./authentication-db.service";
 
 export class AuthenticationService {
-    private makeRandomPassword (): string {
+    public async add(user: User): Promise<boolean> {
+        const password = this.makeRandomPassword();
+        const hash = await this.makeHash(password);
+        return await AuthenticationDBService.add(user.id, hash);
+    }
+
+    private makeRandomPassword(): string {
         return generator.generate({
             length: 8,
             numbers: true,

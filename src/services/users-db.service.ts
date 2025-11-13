@@ -60,11 +60,8 @@ export class UsersDBService {
   }
 
   public static async addUser(user: User): Promise<number> {
-    const client = await pool.connect();
     try {
-        await client.query("BEGIN");
-
-        const result = await client.query(
+        const result = await pool.query(
             "INSERT INTO users (name, email, role) VALUES ($1, $2, $3) RETURNING id",
             [user.name, user.email, user.role]
         );
@@ -73,37 +70,24 @@ export class UsersDBService {
         if (!id)
             return -1;
 
-        await client.query("COMMIT");
-
         return id;
     } catch (err) {
-        await client.query("ROLLBACK");
         logger.error("Failed to add user:", "UsersDBService", err);
-    } finally {
-        client.release();
     }
 
     return -1;
   }
 
   public static async updateUser(user: User): Promise<boolean> {
-    const client = await pool.connect();
     try {
-        await client.query("BEGIN");
-
-        await client.query(
+        await pool.query(
             "UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4",
             [user.name, user.email, user.role, user.id]
         );
 
-        await client.query("COMMIT");
-
         return true;
     } catch (err) {
-        await client.query("ROLLBACK");
         logger.error("Failed to update user:", "UsersDBService", err);
-    } finally {
-        client.release();
     }
 
     return false;
