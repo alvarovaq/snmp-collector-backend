@@ -1,10 +1,10 @@
 import { User } from "../models";
 import { logger } from "./logger.service";
 import { UsersDBService } from "./users-db.service";
-import { AuthenticationService } from './authentication.service';
+import { AuthService } from './auth.service';
 
 export class UsersService {
-    constructor(private readonly authenticationService: AuthenticationService) {
+    constructor(private readonly authenticationService: AuthService) {
     }
 
     public async getUsers(): Promise<User[]> {

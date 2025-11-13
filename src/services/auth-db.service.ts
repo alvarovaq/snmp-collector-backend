@@ -1,7 +1,7 @@
 import { pool } from "../config/db";
 import { logger } from "./logger.service";
 
-export class AuthenticationDBService {
+export class AuthDBService {
     public static async add(userId: number, hash: string): Promise<boolean> {
         let isOk: boolean = false;
         try {    
@@ -12,7 +12,7 @@ export class AuthenticationDBService {
             
             isOk = true;
         } catch (err) {
-            logger.error("Failed to add auth:", "AuthenticationDBService", err);
+            logger.error("Failed to add auth:", "AuthDBService", err);
         }
     
         return isOk;

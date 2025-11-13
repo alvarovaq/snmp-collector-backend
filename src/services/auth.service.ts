@@ -2,13 +2,13 @@ import generator from "generate-password";
 import bcrypt from "bcrypt";
 import { logger } from "./logger.service";
 import { User } from "../models";
-import { AuthenticationDBService } from "./authentication-db.service";
+import { AuthDBService } from "./auth-db.service";
 
-export class AuthenticationService {
+export class AuthService {
     public async add(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
-        return await AuthenticationDBService.add(user.id, hash);
+        return await AuthDBService.add(user.id, hash);
     }
 
     private makeRandomPassword(): string {
@@ -30,7 +30,7 @@ export class AuthenticationService {
         try {
             return await bcrypt.compare(password, hash);
         } catch (error) {
-            logger.error("Error al verificar contraseña", "AuthenticationService", error);
+            logger.error("Error al verificar contraseña", "AuthService", error);
         }
         return false;
     }
