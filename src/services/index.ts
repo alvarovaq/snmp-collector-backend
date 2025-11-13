@@ -31,5 +31,6 @@ process.on("SIGTERM", () => {
 export {
     devicesService,
     oidRecordsService,
+    authService,
     usersService,
 };

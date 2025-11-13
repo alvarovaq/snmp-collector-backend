@@ -17,4 +17,27 @@ export class AuthDBService {
     
         return isOk;
     }
+
+    public static async getHash(email: string): Promise<string | undefined> {
+        try {
+            const query = `
+                SELECT ua.password
+                FROM users u
+                INNER JOIN usersauth ua ON ua.user_id = u.id
+                WHERE LOWER(u.email) = LOWER($1)
+                AND deleted_at IS NULL
+            `;
+    
+            const { rows } = await pool.query(query, [email]);
+            if (!rows.length)
+                return undefined;
+    
+            const row = rows[0];
+            return row.password;
+        } catch (err) {
+            logger.error("Failed to get hash:", "AuthDBService", err);
+        }
+    
+        return undefined;
+    }
 }
