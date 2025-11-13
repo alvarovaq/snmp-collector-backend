@@ -25,6 +25,14 @@ export class AuthService {
         return this.makeToken(user);
     }
 
+    public verifyToken(token: string): JwtPayload | undefined {
+        try {
+            return jwt.verify(token, env.auth.jwtSecret) as JwtPayload;
+        } catch (err) {
+            return undefined;
+        }
+    }
+
     private makeRandomPassword(): string {
         return generator.generate({
             length: 8,
