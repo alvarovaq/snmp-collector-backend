@@ -1,23 +1,28 @@
 import generator from "generate-password";
 import bcrypt from "bcrypt";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { logger } from "./logger.service";
 import { Credentials, User } from "../models";
 import { AuthDBService } from "./auth-db.service";
+import { UsersDBService } from "./users-db.service";
+import { JwtPayload } from "jsonwebtoken";
+import { env } from "../config/env";
 
 export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
-        console.log(password);
         const hash = await this.makeHash(password);
         return await AuthDBService.add(user.id, hash);
     }
 
     public async login(credentials: Credentials): Promise<string | undefined> {
-        const hash = await AuthDBService.getHash(credentials.email);
+        const user = await UsersDBService.getUserByEmail(credentials.email);
+        if (!user) return undefined;
+        const hash = await AuthDBService.getHash(user.id);
         if (hash === undefined) return undefined;
         const isOk = await this.checkPassword(credentials.password, hash);
         if (!isOk) return undefined;
-        return "blablabla";
+        return this.makeToken(user);
     }
 
     private makeRandomPassword(): string {
@@ -42,5 +47,19 @@ export class AuthService {
             logger.error("Error al verificar contraseña", "AuthService", error);
         }
         return false;
+    }
+
+    private makeToken(user: User): string {
+        const payload: JwtPayload = {
+            id: user.id,
+            email: user.email,
+            role: user.role
+        };
+
+        const options: SignOptions = {
+            expiresIn: env.auth.jwtExpiresIn,
+        };
+
+        return jwt.sign(payload, env.auth.jwtSecret, options);
     }
 }

@@ -17,5 +17,9 @@ export const env = {
     },
     snmp: {
         port: Number(process.env.SNMP_PORT),
+    },
+    auth: {
+        jwtSecret: process.env.AUTH_JWT_SECRET || "mi_clave_secreta",
+        jwtExpiresIn: Number(process.env.AUTH_JWT_EXPIRES_IN) || 3600,
     }
 };

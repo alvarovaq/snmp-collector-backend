@@ -39,6 +39,7 @@ export class UsersDBService {
             FROM users
             WHERE deleted_at IS NULL
             AND id = $1
+            AND deleted_at IS NULL
         `;
 
         const { rows } = await pool.query(query, [userId]);
@@ -54,6 +55,34 @@ export class UsersDBService {
         } as User;
     } catch (err) {
         logger.error("Failed to get users:", "UsersDBService", err);
+    }
+
+    return undefined;
+  }
+
+  public static async getUserByEmail(email: string): Promise<User | undefined> {
+    try {
+        const query = `
+            SELECT id, name, email, role
+            FROM users
+            WHERE deleted_at IS NULL
+            AND LOWER(email) = LOWER($1)
+            AND deleted_at IS NULL
+        `;
+
+        const { rows } = await pool.query(query, [email]);
+        if (!rows.length)
+            return undefined;
+
+        const row = rows[0];
+        return {
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            role: row.role as Role,
+        } as User;
+    } catch (err) {
+        logger.error("Failed to get users by email:", "UsersDBService", err);
     }
 
     return undefined;

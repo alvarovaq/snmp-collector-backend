@@ -18,17 +18,11 @@ export class AuthDBService {
         return isOk;
     }
 
-    public static async getHash(email: string): Promise<string | undefined> {
+    public static async getHash(userId: number): Promise<string | undefined> {
         try {
-            const query = `
-                SELECT ua.password
-                FROM users u
-                INNER JOIN usersauth ua ON ua.user_id = u.id
-                WHERE LOWER(u.email) = LOWER($1)
-                AND deleted_at IS NULL
-            `;
+            const query = "SELECT password FROM usersauth WHERE user_id = $1";
     
-            const { rows } = await pool.query(query, [email]);
+            const { rows } = await pool.query(query, [userId]);
             if (!rows.length)
                 return undefined;
     
