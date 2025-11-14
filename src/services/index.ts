@@ -4,6 +4,7 @@ import { SnmpPollingService } from "./snmp-polling.service";
 import { SnmpTrapListenerService } from "./snmp-trap-listener.service";
 import { env } from "../config/env";
 import { UsersService } from "./users.service";
+import { AuthService } from "./auth.service";
 
 export * from "./snmp-polling.service";
 export * from "./devices.service";
@@ -14,7 +15,8 @@ const oidRecordsService = new OidRecordsService();
 const snmpPollingService = new SnmpPollingService(oidRecordsService);
 const devicesService = new DevicesService(snmpPollingService);
 const snmpTrapListenerService = new SnmpTrapListenerService(env.snmp.port);
-const usersService = new UsersService();
+const authService = new AuthService();
+const usersService = new UsersService(authService);
 
 process.on("SIGINT", () => {
     snmpTrapListenerService.stop();
@@ -29,5 +31,6 @@ process.on("SIGTERM", () => {
 export {
     devicesService,
     oidRecordsService,
+    authService,
     usersService,
 };

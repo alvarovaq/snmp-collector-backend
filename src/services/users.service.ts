@@ -1,8 +1,12 @@
 import { User } from "../models";
 import { logger } from "./logger.service";
 import { UsersDBService } from "./users-db.service";
+import { AuthService } from './auth.service';
 
 export class UsersService {
+    constructor(private readonly authenticationService: AuthService) {
+    }
+
     public async getUsers(): Promise<User[]> {
         return await UsersDBService.getUsers();
     }
@@ -17,6 +21,7 @@ export class UsersService {
             return undefined;
 
         const newUser: User = { ...user, id };
+        this.authenticationService.addAuth(newUser);
 
         logger.info(`User added: ${user.email} (ID: ${id})`, "UsersService");
 

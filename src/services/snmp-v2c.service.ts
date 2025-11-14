@@ -1,6 +1,6 @@
 import snmp from "net-snmp";
 import { SnmpResult } from "../models";
-import { getSnmpObjType } from "../utils/snmp.utils";
+import { getSnmpObjType } from "../utils/snmp";
 
 export class SnmpV2CService {
   private ip: string;
