@@ -12,7 +12,9 @@ export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
-        console.log(password);
+
+        console.log(password); //REMOVE
+
         return await AuthDBService.add(user.id, hash);
     }
 
