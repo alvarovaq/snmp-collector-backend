@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { logger, authService } from "../services";
-import { Credentials } from "../models";
+import { ChangePasswordReq, Credentials } from "../models";
 
 export class AuthController {
     public static async login(req: Request, res: Response) {
@@ -28,6 +28,25 @@ export class AuthController {
             res.status(200).json(newToken);
         } catch (err) {
             logger.error("Failed to renew", "AuthController", err);
+            res.status(500).json();
+        }
+    }
+
+    public static async changePassword(req: Request, res: Response) {
+        try {
+            const token = req.headers.authorization?.split(" ")[1];
+            if (!token)
+                return res.status(401).json();
+            const payload = await authService.getPayloadData(token);
+            if (!payload)
+                return res.status(400).json();
+            const isOk = await authService.changePassword(payload.userId, req.body as ChangePasswordReq);
+            if (isOk)
+                res.status(200).json();
+            else
+                res.status(400).json();
+        } catch (err) {
+            logger.error("Failed to changePassword", "AuthController", err);
             res.status(500).json();
         }
     }

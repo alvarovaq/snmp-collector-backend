@@ -2,16 +2,26 @@ import generator from "generate-password";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { logger } from "./logger.service";
-import { Credentials, User } from "../models";
+import { ChangePasswordReq, Credentials, User, PayloadData } from "../models";
 import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
-import { JwtPayload } from "jsonwebtoken";
 import { env } from "../config/env";
+
+interface DecodedTokenPayload extends PayloadData {
+    exp?: number;
+    iat?: number;
+    nbf?: number;
+    iss?: string;
+    sub?: string;
+    aud?: string | string[];
+    jti?: string;
+}
 
 export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
+        console.log(password);
         return await AuthDBService.add(user.id, hash);
     }
 
@@ -23,26 +33,45 @@ export class AuthService {
         const isOk = await this.checkPassword(credentials.password, hash);
         if (!isOk) return undefined;
         
-        const payload: JwtPayload = {
-            id: user.id,
+        const payload: PayloadData = {
+            userId: user.id,
             email: user.email,
             role: user.role
         };
         return this.makeToken(payload);
     }
 
-    public verifyToken(token: string): JwtPayload | undefined {
+    public verifyToken(token: string): boolean {
         try {
-            return jwt.verify(token, env.auth.jwtSecret) as JwtPayload;
+            return jwt.verify(token, env.auth.jwtSecret) != null;
         } catch (err) {
-            return undefined;
+            return false;
         }
     }
 
-    public renewToken(token: string): string {
-        const payload = jwt.decode(token) as JwtPayload;
-        const { exp, iat, ...cleanPayload } = payload;
-        return this.makeToken(cleanPayload);
+    public renewToken(token: string): string | undefined {
+        const payload = this.getPayloadData(token);
+        if (!payload) return undefined;
+        return this.makeToken(payload);
+    }
+
+    public getPayloadData(token: string): PayloadData | undefined {
+        const decodedPayload = jwt.decode(token) as DecodedTokenPayload |null;
+        if (decodedPayload) {
+            const { exp, iat, ...payload } = decodedPayload;
+            return payload;
+        }
+        return undefined;
+    }
+
+    public async changePassword(userId: number, req: ChangePasswordReq): Promise<boolean> {
+        const hash = await AuthDBService.getHash(userId);
+        if (!hash) return false;
+        const isOk = await this.checkPassword(req.password, hash);
+        if (!isOk) return false;
+
+        const newHash = await this.makeHash(req.newPassword);
+        return await AuthDBService.updatePassword(userId, newHash);
     }
 
     private makeRandomPassword(): string {
@@ -69,7 +98,7 @@ export class AuthService {
         return false;
     }
 
-    private makeToken(payload: JwtPayload): string {
+    private makeToken(payload: PayloadData): string {
         const options: SignOptions = {
             expiresIn: env.auth.jwtExpiresIn,
         };

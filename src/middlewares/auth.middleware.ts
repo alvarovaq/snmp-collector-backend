@@ -13,8 +13,8 @@ export function AuthMiddleware(req: Request, res: Response, next: NextFunction) 
         }
 
         const token = authHeader.split(" ")[1];
-        const payload = authService.verifyToken(token);
-        if (!payload) return res.status(401).json();
+        const isOk = authService.verifyToken(token);
+        if (!isOk) return res.status(401).json();
 
         next();
     }

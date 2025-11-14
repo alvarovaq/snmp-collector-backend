@@ -34,4 +34,19 @@ export class AuthDBService {
     
         return undefined;
     }
+
+    public static async updatePassword(id: number, password: string): Promise<boolean> {
+        try {
+            await pool.query(
+                "UPDATE usersauth SET password = $1 WHERE user_id = $2",
+                [password, id]
+            );
+
+            return true;
+        } catch (err) {
+            logger.error("Failed to update password:", "AuthDBService", err);
+        }
+
+        return false;
+    }
 }
