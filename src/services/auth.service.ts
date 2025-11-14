@@ -22,7 +22,13 @@ export class AuthService {
         if (hash === undefined) return undefined;
         const isOk = await this.checkPassword(credentials.password, hash);
         if (!isOk) return undefined;
-        return this.makeToken(user);
+        
+        const payload: JwtPayload = {
+            id: user.id,
+            email: user.email,
+            role: user.role
+        };
+        return this.makeToken(payload);
     }
 
     public verifyToken(token: string): JwtPayload | undefined {
@@ -31,6 +37,12 @@ export class AuthService {
         } catch (err) {
             return undefined;
         }
+    }
+
+    public renewToken(token: string): string {
+        const payload = jwt.decode(token) as JwtPayload;
+        const { exp, iat, ...cleanPayload } = payload;
+        return this.makeToken(cleanPayload);
     }
 
     private makeRandomPassword(): string {
@@ -57,13 +69,7 @@ export class AuthService {
         return false;
     }
 
-    private makeToken(user: User): string {
-        const payload: JwtPayload = {
-            id: user.id,
-            email: user.email,
-            role: user.role
-        };
-
+    private makeToken(payload: JwtPayload): string {
         const options: SignOptions = {
             expiresIn: env.auth.jwtExpiresIn,
         };

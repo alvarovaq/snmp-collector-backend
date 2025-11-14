@@ -21,6 +21,6 @@ export const env = {
     auth: {
         enabled: process.env.AUTH_ENABLED ? process.env.AUTH_ENABLED === "true" : true,
         jwtSecret: process.env.AUTH_JWT_SECRET || "mi_clave_secreta",
-        jwtExpiresIn: Number(process.env.AUTH_JWT_EXPIRES_IN) || 3600,
+        jwtExpiresIn: process.env.AUTH_JWT_EXPIRES_IN ? Number(process.env.AUTH_JWT_EXPIRES_IN) : undefined,
     }
 };
