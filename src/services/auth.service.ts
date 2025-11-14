@@ -6,16 +6,7 @@ import { ChangePasswordReq, Credentials, User, PayloadData } from "../models";
 import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
 import { env } from "../config/env";
-
-interface DecodedTokenPayload extends PayloadData {
-    exp?: number;
-    iat?: number;
-    nbf?: number;
-    iss?: string;
-    sub?: string;
-    aud?: string | string[];
-    jti?: string;
-}
+import { getPayloadData } from "../utils/auth";
 
 export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
@@ -41,27 +32,10 @@ export class AuthService {
         return this.makeToken(payload);
     }
 
-    public verifyToken(token: string): boolean {
-        try {
-            return jwt.verify(token, env.auth.jwtSecret) != null;
-        } catch (err) {
-            return false;
-        }
-    }
-
     public renewToken(token: string): string | undefined {
-        const payload = this.getPayloadData(token);
+        const payload = getPayloadData(token);
         if (!payload) return undefined;
         return this.makeToken(payload);
-    }
-
-    public getPayloadData(token: string): PayloadData | undefined {
-        const decodedPayload = jwt.decode(token) as DecodedTokenPayload |null;
-        if (decodedPayload) {
-            const { exp, iat, ...payload } = decodedPayload;
-            return payload;
-        }
-        return undefined;
     }
 
     public async changePassword(userId: number, req: ChangePasswordReq): Promise<boolean> {

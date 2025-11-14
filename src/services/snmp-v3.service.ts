@@ -1,6 +1,6 @@
 import snmp from "net-snmp";
 import { SnmpResult, SnmpV3AuthProtocol, SnmpV3PrivProtocol, SnmpV3Security, SnmpV3SecurityLevel } from "../models";
-import { getSnmpObjType } from "../utils/snmp.utils";
+import { getSnmpObjType } from "../utils/snmp";
 
 export class SnmpV3Service {
   private ip: string;

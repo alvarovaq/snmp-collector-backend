@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { OidRecordsController } from "../controllers";
-import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { authMiddleware } from "../middlewares";
 
 const router = Router();
 
-router.get("/getAll", AuthMiddleware, OidRecordsController.getAll);
+router.get("/getAll", authMiddleware, OidRecordsController.getAll);
 
 export default router;

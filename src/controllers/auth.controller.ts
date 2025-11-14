@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { logger, authService } from "../services";
 import { ChangePasswordReq, Credentials } from "../models";
+import { getPayloadData, splitBearerToken } from "../utils/auth";
 
 export class AuthController {
     public static async login(req: Request, res: Response) {
@@ -19,11 +20,8 @@ export class AuthController {
 
     public static renew(req: Request, res: Response) {
         try {
-            const token = req.headers.authorization?.split(" ")[1];
-            if (!token) {
-                res.status(400).json();
-                return;
-            }
+            const token = splitBearerToken(req.headers.authorization);
+            if (!token) return res.status(400).json();
             const newToken = authService.renewToken(token!);
             res.status(200).json(newToken);
         } catch (err) {
@@ -34,10 +32,10 @@ export class AuthController {
 
     public static async changePassword(req: Request, res: Response) {
         try {
-            const token = req.headers.authorization?.split(" ")[1];
+            const token = splitBearerToken(req.headers.authorization);
             if (!token)
                 return res.status(401).json();
-            const payload = await authService.getPayloadData(token);
+            const payload = getPayloadData(token);
             if (!payload)
                 return res.status(400).json();
             const isOk = await authService.changePassword(payload.userId, req.body as ChangePasswordReq);
