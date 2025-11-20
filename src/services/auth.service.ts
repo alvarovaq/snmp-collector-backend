@@ -7,13 +7,23 @@ import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
 import { env } from "../config/env";
 import { getPayloadData } from "../utils/auth";
+import { EmailService, EmailOptions } from './email.service';
 
 export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
 
-        console.log(password); //REMOVE
+        const options: EmailOptions = {
+            to: user.email,
+            subject: "Bienvenido a nuestra plataforma",
+            html: `
+                <h1>Hola ${user.name},</h1>
+                <p>¡Bienvenido a nuestra plataforma!</p>
+                <p>Tu contraseña para poder acceder es: <strong>${password}</strong>. Cámbiala lo antes posible.</p>
+            `,
+        };
+        EmailService.sendEmail(options);
 
         return await AuthDBService.add(user.id, hash);
     }

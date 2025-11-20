@@ -22,5 +22,10 @@ export const env = {
         enabled: process.env.AUTH_ENABLED ? process.env.AUTH_ENABLED === "true" : true,
         jwtSecret: process.env.AUTH_JWT_SECRET || "mi_clave_secreta",
         jwtExpiresIn: process.env.AUTH_JWT_EXPIRES_IN ? Number(process.env.AUTH_JWT_EXPIRES_IN) : undefined,
+    },
+    email: {
+        service: process.env.EMAIL_SERVICE || "gmail",
+        user: process.env.EMAIL_USER || "",
+        pass: process.env.EMAIL_PASS || "",
     }
 };
