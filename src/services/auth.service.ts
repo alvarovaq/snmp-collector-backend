@@ -2,11 +2,11 @@ import generator from "generate-password";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { logger } from "./logger.service";
-import { ChangePasswordReq, Credentials, User, PayloadData, ResetPWDTokenReq } from "../models";
+import { ChangePasswordReq, Credentials, User, PayloadData, ResetPWDTokenReq, ResetPasswordReq } from "../models";
 import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
 import { env } from "../config/env";
-import { getPayloadData } from "../utils/auth";
+import { getPayloadData, verifyToken } from "../utils/auth";
 import { EmailService, EmailOptions } from './email.service';
 
 export class AuthService {
@@ -88,6 +88,16 @@ export class AuthService {
             `,
         };
         return await EmailService.sendEmail(options);
+    }
+
+    public async resetPassword(req: ResetPasswordReq): Promise<boolean> {
+        if (!verifyToken(req.token)) return false;
+
+        const payload = getPayloadData(req.token);
+        if (!payload) return false;
+
+        const hash = await this.makeHash(req.password);
+        return await AuthDBService.updatePassword(payload.userId, hash);
     }
 
     private makeRandomPassword(): string {
