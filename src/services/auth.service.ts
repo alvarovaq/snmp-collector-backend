@@ -2,18 +2,28 @@ import generator from "generate-password";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { logger } from "./logger.service";
-import { ChangePasswordReq, Credentials, User, PayloadData } from "../models";
+import { ChangePasswordReq, Credentials, User, PayloadData, ResetPWDTokenReq, ResetPasswordReq } from "../models";
 import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
 import { env } from "../config/env";
-import { getPayloadData } from "../utils/auth";
+import { getPayloadData, verifyToken } from "../utils/auth";
+import { EmailService, EmailOptions } from './email.service';
 
 export class AuthService {
     public async addAuth(user: User): Promise<boolean> {
         const password = this.makeRandomPassword();
         const hash = await this.makeHash(password);
 
-        console.log(password); //REMOVE
+        const options: EmailOptions = {
+            to: user.email,
+            subject: "Bienvenido a nuestra plataforma",
+            html: `
+                <h1>Hola ${user.name},</h1>
+                <p>¡Bienvenido a nuestra plataforma!</p>
+                <p>Tu contraseña para poder acceder es: <strong>${password}</strong>. Cámbiala lo antes posible.</p>
+            `,
+        };
+        EmailService.sendEmail(options);
 
         return await AuthDBService.add(user.id, hash);
     }
@@ -48,6 +58,46 @@ export class AuthService {
 
         const newHash = await this.makeHash(req.newPassword);
         return await AuthDBService.updatePassword(userId, newHash);
+    }
+
+    public async getResetPasswordToken(req: ResetPWDTokenReq): Promise<boolean> {
+        const user = await UsersDBService.getUserByEmail(req.email);
+        if (!user) return false;
+        const payload: PayloadData = {
+            userId: user.id,
+            email: user.email,
+            role: user.role
+        };
+        const token = this.makeToken(payload);
+        const url = req.url + "/" + token;
+
+        const options: EmailOptions = {
+            to: user.email,
+            subject: "Recuperación de contraseña",
+            text: `
+                Hola ${user.name},
+
+                Hemos recibido una solicitud para restablecer tu contraseña.
+                Para continuar, haz clic en el siguiente enlace:
+
+                ${url}
+
+                Si no solicitaste este cambio, puedes ignorar este correo.
+
+                Gracias,
+            `,
+        };
+        return await EmailService.sendEmail(options);
+    }
+
+    public async resetPassword(req: ResetPasswordReq): Promise<boolean> {
+        if (!verifyToken(req.token)) return false;
+
+        const payload = getPayloadData(req.token);
+        if (!payload) return false;
+
+        const hash = await this.makeHash(req.password);
+        return await AuthDBService.updatePassword(payload.userId, hash);
     }
 
     private makeRandomPassword(): string {
