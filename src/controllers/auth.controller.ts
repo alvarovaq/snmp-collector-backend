@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { logger, authService } from "../services";
 import { ChangePasswordReq, Credentials } from "../models";
 import { getPayloadData, splitBearerToken } from "../utils/auth";
+import { ResetPWDTokenReq } from '../models/auth.model';
 
 export class AuthController {
     public static async login(req: Request, res: Response) {
@@ -45,6 +46,19 @@ export class AuthController {
                 res.status(400).json();
         } catch (err) {
             logger.error("Failed to changePassword", "AuthController", err);
+            res.status(500).json();
+        }
+    }
+
+    public static async resetPasswordToken(req: Request, res: Response) {
+        try {
+            if (await authService.getResetPasswordToken(req.body as ResetPWDTokenReq)) {
+                res.status(200).json();
+            } else {
+                res.status(400).json();
+            }
+        } catch (err) {
+            logger.error("Failed to resetPasswordToken", "AuthController", err);
             res.status(500).json();
         }
     }

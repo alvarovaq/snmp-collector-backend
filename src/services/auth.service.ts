@@ -2,7 +2,7 @@ import generator from "generate-password";
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { logger } from "./logger.service";
-import { ChangePasswordReq, Credentials, User, PayloadData } from "../models";
+import { ChangePasswordReq, Credentials, User, PayloadData, ResetPWDTokenReq } from "../models";
 import { AuthDBService } from "./auth-db.service";
 import { UsersDBService } from "./users-db.service";
 import { env } from "../config/env";
@@ -58,6 +58,36 @@ export class AuthService {
 
         const newHash = await this.makeHash(req.newPassword);
         return await AuthDBService.updatePassword(userId, newHash);
+    }
+
+    public async getResetPasswordToken(req: ResetPWDTokenReq): Promise<boolean> {
+        const user = await UsersDBService.getUserByEmail(req.email);
+        if (!user) return false;
+        const payload: PayloadData = {
+            userId: user.id,
+            email: user.email,
+            role: user.role
+        };
+        const token = this.makeToken(payload);
+        const url = req.url + "/" + token;
+
+        const options: EmailOptions = {
+            to: user.email,
+            subject: "Recuperación de contraseña",
+            text: `
+                Hola ${user.name},
+
+                Hemos recibido una solicitud para restablecer tu contraseña.
+                Para continuar, haz clic en el siguiente enlace:
+
+                ${url}
+
+                Si no solicitaste este cambio, puedes ignorar este correo.
+
+                Gracias,
+            `,
+        };
+        return await EmailService.sendEmail(options);
     }
 
     private makeRandomPassword(): string {

@@ -10,6 +10,12 @@ export interface ChangePasswordReq
     newPassword: string;
 }
 
+export interface ResetPWDTokenReq
+{
+    email: string;
+    url: string;
+}
+
 export interface PayloadData {
     userId: number;
     email: string;
