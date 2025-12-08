@@ -4,6 +4,8 @@ import os
 import json
 import sys
 import shutil
+import random
+import threading
 
 # -----------------------------
 # Configuración base
@@ -144,17 +146,62 @@ def start_simulators(devices):
         if "base_snmprec" in dev:
             generated_dir, snmprec_name = copy_snmprec(dev)
             dev["data_dir"] = generated_dir
-            # Para SNMPv3, indicamos contexto si existe
             if str(dev["version"]).lower() == "3":
                 dev["v3_context"] = dev.get("context", "")
 
-        # 2️⃣ Construir comando
+        # 2️⃣ Actualizar valores iniciales de OIDs antes de arrancar
+        if "oids" in dev:
+            snmprec_file = os.path.join(dev["data_dir"],
+                                    dev.get("context", "public") + ".snmprec")
+            # Inicializa los valores aleatorios
+            lines = []
+            with open(snmprec_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parts = line.split("|")
+                    if len(parts) == 4:
+                        oid, type_, value, community = parts
+                        has_community = True
+                    elif len(parts) == 3:
+                        oid, type_, value = parts
+                        has_community = False
+                    else:
+                        print(f"WARNING: línea inválida en {snmprec_file}: {line}")
+                        continue
+
+                    # Reemplazar valor si OID está definido en JSON
+                    for oid_cfg in dev.get("oids", []):
+                        if oid == oid_cfg["oid"]:
+                            min_val = oid_cfg["min"]
+                            max_val = oid_cfg["max"]
+                            if isinstance(min_val, int) and isinstance(max_val, int):
+                                value = str(random.randint(min_val, max_val))
+                            else:
+                                value = str(round(random.uniform(min_val, max_val), 1))  # 1 decimal
+
+                    # Reconstruir línea conservando si tenía comunidad
+                    if has_community:
+                        lines.append(f"{oid}|{type_}|{value}|{community}")
+                    else:
+                        lines.append(f"{oid}|{type_}|{value}")
+
+            with open(snmprec_file, "w") as f:
+                f.write("\n".join(lines))
+
+            with open(snmprec_file, "w") as f:
+                f.write("\n".join(lines))
+
+        # 3️⃣ Arrancar hilos para actualización periódica
+        update_snmprec_values_periodically(dev)
+
+        # 4️⃣ Construir comando SNMPSIM
         cmd = build_command(dev)
 
-        # 3️⃣ Log del proceso
+        # 5️⃣ Log del proceso
         log_file_path = os.path.join(LOG_DIR, f"{dev['name']}_{dev['port']}.log")
         log_file = open(log_file_path, "w")
-
         print(f"Iniciando {dev['name']} en puerto {dev['port']} -> log: {log_file_path}")
         p = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT)
         processes.append((p, log_file))
@@ -163,6 +210,70 @@ def start_simulators(devices):
 
     print("\nTodos los simuladores iniciados. Ctrl+C para detener.\n")
     return processes
+
+
+def update_snmprec_values_periodically(device):
+    """
+    Crea hilos para actualizar OIDs con 'interval' definido en el JSON.
+    """
+    if "oids" not in device:
+        return
+
+    snmprec_file = os.path.join(BASE_DIR, "snmprec", device["name"],
+                               device.get("context", "public") + ".snmprec")
+
+    for oid_cfg in device["oids"]:
+        interval = oid_cfg.get("interval")
+        if not interval:
+            continue  # Si no hay intervalo, no actualiza automáticamente
+
+        def updater(oid_cfg=oid_cfg, device=device):
+            while True:
+                try:
+                    # Leer snmprec
+                    lines = []
+                    with open(snmprec_file, "r") as f:
+                        for line in f:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            parts = line.split("|")
+                            if len(parts) == 4:
+                                oid, type_, value, community = parts
+                                has_community = True
+                            elif len(parts) == 3:
+                                oid, type_, value = parts
+                                has_community = False
+                            else:
+                                print(f"WARNING: línea inválida en {snmprec_file}: {line}")
+                                continue
+
+                            # Reemplazar valor si OID está configurado
+                            if oid == oid_cfg["oid"]:
+                                min_val = oid_cfg["min"]
+                                max_val = oid_cfg["max"]
+                                if isinstance(min_val, int) and isinstance(max_val, int):
+                                    value = str(random.randint(min_val, max_val))
+                                else:
+                                    value = str(round(random.uniform(min_val, max_val), 1))  # 1 decimal
+
+                            # Reconstruir línea conservando si tenía comunidad
+                            if has_community:
+                                lines.append(f"{oid}|{type_}|{value}|{community}")
+                            else:
+                                lines.append(f"{oid}|{type_}|{value}")
+
+                    # Sobrescribir snmprec
+                    with open(snmprec_file, "w") as f:
+                        f.write("\n".join(lines))
+
+                except Exception as e:
+                    print(f"ERROR actualizando OID {oid_cfg['oid']} en {device['name']}: {e}")
+
+                time.sleep(interval)
+
+        thread = threading.Thread(target=updater, daemon=True)
+        thread.start()
 
 
 # -----------------------------
