@@ -1,0 +1,43 @@
+{
+  "devices": [
+    {
+      "name": "device01",
+      "port": 16101,
+      "version": "2c",
+      "community": "public",
+      "base_snmprec": "res/default.snmprec"
+    },
+    {
+      "name": "device02",
+      "port": 16102,
+      "version": "3",
+      "user": "user2",
+      "base_snmprec": "res/default.snmprec"
+    },
+    {
+      "name": "device03",
+      "port": 16103,
+      "version": "3",
+      "user": "user3",
+      "auth_protocol": "MD5",
+      "auth_password": "authpass",
+      "base_snmprec": "res/default.snmprec",
+      "oids": [
+        { "oid": "1.3.6.1.4.1.2021.11.10.0", "min": 0, "max": 30, "interval": 15 },
+        { "oid": "1.3.6.1.4.1.2021.13.16.2.1.3.0", "min": 20, "max": 30, "interval": 20 }
+      ]
+    },
+    {
+      "name": "device04",
+      "port": 16104,
+      "version": "3",
+      "context": "ctx",
+      "user": "user4",
+      "auth_protocol": "SHA",
+      "auth_password": "authpass",
+      "priv_protocol": "AES",
+      "priv_password": "privpass",
+      "base_snmprec": "res/default.snmprec"
+    }
+  ]
+}

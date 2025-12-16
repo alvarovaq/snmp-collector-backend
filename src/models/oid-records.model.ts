@@ -1,5 +1,12 @@
 import { SnmpObjType } from "./snmp-common.model";
 
+export interface OidRecordsReq {
+    deviceId: number;
+    oid: string;
+    start: Date;
+    end: Date;
+}
+
 export interface OidRecordID {
     deviceId: number;
     oid: string;

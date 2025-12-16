@@ -12,8 +12,12 @@ export class OidRecordsService {
         const now = new Date();
         const records: OidRecord[] = [];
         for (const result of results) {
-            const record = this.setValue(deviceId, result, now);
-            if (record) {
+            const key = this.makeRecordKey(deviceId, result.oid);
+            const lastRecord = this.records.get(key);
+            const hasChange = !lastRecord || lastRecord.value !== result.value || lastRecord.error !== result.error;
+
+            const record = this.setValue(deviceId, result, now, hasChange);
+            if (hasChange) {
                 records.push(record);
             }
         }
@@ -27,31 +31,24 @@ export class OidRecordsService {
         }
     }
 
-    private setValue(deviceId: number, result: SnmpResult, date: Date): OidRecord | undefined {
+    private setValue(deviceId: number, result: SnmpResult, date: Date, hasChange: boolean): OidRecord {
         const key = this.makeRecordKey(deviceId, result.oid);
-
-        const lastRecord = this.records.get(key);
-        const hasChange = !lastRecord || lastRecord.value !== result.value || lastRecord.error !== result.error;
         
         this.logResult(deviceId, result, hasChange);
 
-        if (hasChange) {
-            const record: OidRecord = {
-                deviceId,
-                oid: result.oid,
-                value: result.value,
-                error: result.error,
-                type: result.type,
-                date: date
-            };
-            
-            this.records.set(key, record);
-            OidRecordsDBService.addRecord(record);
+        const record: OidRecord = {
+            deviceId,
+            oid: result.oid,
+            value: result.value,
+            error: result.error,
+            type: result.type,
+            date: date
+        };
+        
+        this.records.set(key, record);
+        OidRecordsDBService.addRecord(record);
 
-            return record;
-        }
-
-        return undefined;
+        return record;
     }
 
     private logResult(deviceId: number, result: SnmpResult, hasChange: boolean): void {
