@@ -61,3 +61,12 @@ CREATE TABLE IF NOT EXISTS public.usersauth (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     password VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS public.rules (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    operator VARCHAR(10) NOT NULL,
+    threshold VARCHAR(255) NOT NULL,
+    severity VARCHAR(50) NOT NULL,
+    deleted_at TIMESTAMP
+);
