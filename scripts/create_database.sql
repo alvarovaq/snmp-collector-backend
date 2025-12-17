@@ -70,3 +70,18 @@ CREATE TABLE IF NOT EXISTS public.rules (
     severity VARCHAR(50) NOT NULL,
     deleted_at TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS public.devicesrules (
+    device_id INT NOT NULL,
+    oid VARCHAR(255) NOT NULL,
+    rule_id INT NOT NULL,
+    PRIMARY KEY (device_id, oid, rule_id),
+    CONSTRAINT fk_oid
+        FOREIGN KEY (device_id, oid)
+        REFERENCES public.oids (device_id, oid)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_rule
+        FOREIGN KEY (rule_id)
+        REFERENCES public.rules (id)
+        ON DELETE CASCADE
+);

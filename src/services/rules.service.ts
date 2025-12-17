@@ -2,11 +2,12 @@ import { Rule, WSMessage, WSEvent } from "../models";
 import { logger } from "./logger.service";
 import { RulesDBService } from "./rules-db.service";
 import { WebSocketService } from "./websocket.service";
+import { DevicesService } from './devices.service';
 
 export class RulesService {
     private rules: Map<number, Rule> = new Map();
 
-    constructor() {
+    constructor(private readonly devicesService: DevicesService) {
         this.loadRules();
     }
 
@@ -75,6 +76,8 @@ export class RulesService {
             return false;
 
         this.rules.delete(ruleId);
+
+        this.devicesService.removeRule(ruleId);
 
         const msg: WSMessage = {
             event: WSEvent.RemoveRule,

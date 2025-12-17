@@ -18,7 +18,7 @@ const devicesService = new DevicesService(snmpPollingService);
 const snmpTrapListenerService = new SnmpTrapListenerService(env.snmp.port);
 const authService = new AuthService();
 const usersService = new UsersService(authService);
-const rulesService = new RulesService();
+const rulesService = new RulesService(devicesService);
 
 process.on("SIGINT", () => {
     snmpTrapListenerService.stop();

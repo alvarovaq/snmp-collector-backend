@@ -1,4 +1,4 @@
-import { Device, WSEvent, WSMessage } from "../models";
+import { Device, OidConfig, WSEvent, WSMessage } from "../models";
 import { DevicesDBService } from "./devices-db.service";
 import { SnmpPollingService } from "./snmp-polling.service";
 import { logger } from "./logger.service";
@@ -94,5 +94,15 @@ export class DevicesService {
         logger.info(`Device removed: ${device.name} (ID: ${deviceId})`, "DevicesService");
 
         return true;
+    }
+
+    public async removeRule(ruleId: number): Promise<void> {
+        this.devices.forEach(device => {
+            device.oids.forEach(oid => {
+                oid.rules = oid.rules.filter(rule => rule !== ruleId);
+            });
+        });
+
+        await DevicesDBService.removeDevicesRule(ruleId);
     }
 }

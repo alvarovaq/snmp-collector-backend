@@ -5,6 +5,7 @@ export interface OidConfig
     name: string;
     oid: string;
     frequency: number;
+    rules: number[];
 }
 
 export interface DeviceConfig
