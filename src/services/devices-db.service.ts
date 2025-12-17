@@ -81,7 +81,7 @@ export class DevicesDBService {
     try {
         const query = `
             SELECT rule
-            FROM devicesrules
+            FROM oidsrules
             WHERE device_id = $1 AND oid = $2
         `;
 
@@ -125,7 +125,7 @@ export class DevicesDBService {
 
             for (const rule of oid.rules) {
                 await client.query(
-                    "INSERT INTO devicesrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
+                    "INSERT INTO oidsrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
                     [device.id, oid.oid, rule]
                 );
             }
@@ -165,7 +165,7 @@ export class DevicesDBService {
         );
 
         await client.query(
-            "DELETE FROM devicesrules WHERE device_id = $1",
+            "DELETE FROM oidsrules WHERE device_id = $1",
             [device.id]
         );
 
@@ -184,7 +184,7 @@ export class DevicesDBService {
 
             for (const rule of oid.rules) {
                 await client.query(
-                    "INSERT INTO devicesrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
+                    "INSERT INTO oidsrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
                     [device.id, oid.oid, rule]
                 );
             }
@@ -218,13 +218,13 @@ export class DevicesDBService {
     return false;
   }
 
-  public static async removeDevicesRule(ruleId: number): Promise<boolean> {
+  public static async removeOidsRule(ruleId: number): Promise<boolean> {
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
 
         await client.query(
-            "DELETE FROM devicesrules WHERE rule_id = $1",
+            "DELETE FROM oidsrules WHERE rule_id = $1",
             [ruleId]
         );
 

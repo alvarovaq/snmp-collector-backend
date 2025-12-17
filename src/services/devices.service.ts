@@ -103,6 +103,6 @@ export class DevicesService {
             });
         });
 
-        await DevicesDBService.removeDevicesRule(ruleId);
+        await DevicesDBService.removeOidsRule(ruleId);
     }
 }

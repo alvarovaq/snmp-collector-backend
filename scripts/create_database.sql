@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS public.rules (
     deleted_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS public.devicesrules (
+CREATE TABLE IF NOT EXISTS public.oidsrules (
     device_id INT NOT NULL,
     oid VARCHAR(255) NOT NULL,
     rule_id INT NOT NULL,
