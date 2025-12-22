@@ -57,16 +57,40 @@ export class DevicesDBService {
         `;
 
         const { rows } = await pool.query(query, [device_id]);
-        return rows.map((row: any) => {
+        const oids: OidConfig[] = [];
+        for (const row of rows)         {
             const oidConfig: OidConfig = {
                 oid: row.oid,
                 name: row.name,
-                frequency: row.frequency
+                frequency: row.frequency,
+                rules: await this.getRules(device_id, row.oid)
             };
-            return oidConfig;
-        });
+
+            oids.push(oidConfig);
+        }
+        
+        return oids;
     } catch (err) {
         logger.error("Failed to get oids:", "DevicesDBService", err);
+    }
+
+    return [];
+  }
+
+  public static async getRules(device_id: number, oid: string): Promise<number[]> {
+    try {
+        const query = `
+            SELECT rule
+            FROM oidsrules
+            WHERE device_id = $1 AND oid = $2
+        `;
+
+        const { rows } = await pool.query(query, [device_id, oid]);
+        return rows.map((row: any) => {
+            return row.rule;
+        });
+    } catch (err) {
+        logger.error("Failed to get rules oid device:", "DevicesDBService", err);
     }
 
     return [];
@@ -98,6 +122,13 @@ export class DevicesDBService {
                 "INSERT INTO oids (device_id, oid, name, frequency) VALUES ($1, $2, $3, $4)",
                 [id, oid.oid, oid.name, oid.frequency]
             );
+
+            for (const rule of oid.rules) {
+                await client.query(
+                    "INSERT INTO oidsrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
+                    [device.id, oid.oid, rule]
+                );
+            }
         }
 
         await client.query("COMMIT");
@@ -134,6 +165,11 @@ export class DevicesDBService {
         );
 
         await client.query(
+            "DELETE FROM oidsrules WHERE device_id = $1",
+            [device.id]
+        );
+
+        await client.query(
             `INSERT INTO devicesconfig (device_id, ip, port, version, community, context, user_name, security_level, auth_protocol, auth_key, priv_protocol, priv_key)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [device.id, device.config.ip, device.config.port, device.config.version, device.config.community, device.config.context, device.config.security?.user,
@@ -145,6 +181,13 @@ export class DevicesDBService {
                 "INSERT INTO oids (device_id, oid, name, frequency) VALUES ($1, $2, $3, $4)",
                 [device.id, oid.oid, oid.name, oid.frequency]
             );
+
+            for (const rule of oid.rules) {
+                await client.query(
+                    "INSERT INTO oidsrules (device_id, oid, rule_id) VALUES ($1, $2, $3)",
+                    [device.id, oid.oid, rule]
+                );
+            }
         }
 
         await client.query("COMMIT");
@@ -170,6 +213,29 @@ export class DevicesDBService {
         return rows.length > 0;
     } catch (err) {
         logger.error("Failed to remove device:", "DevicesDBService", err);
+    }
+
+    return false;
+  }
+
+  public static async removeOidsRule(ruleId: number): Promise<boolean> {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        await client.query(
+            "DELETE FROM oidsrules WHERE rule_id = $1",
+            [ruleId]
+        );
+
+        await client.query("COMMIT");
+
+        return true;
+    } catch (err) {
+        await client.query("ROLLBACK");
+        logger.error("Failed to remove rule oids:", "DevicesDBService", err);
+    } finally {
+        client.release();
     }
 
     return false;

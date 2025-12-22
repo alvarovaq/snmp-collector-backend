@@ -4,3 +4,4 @@ export * from "./oid-records.model";
 export * from "./websocket.model";
 export * from "./users.model";
 export * from "./auth.model";
+export * from "./rules.model";

@@ -3,6 +3,8 @@ export enum WSEvent {
     RemoveRecords = "RemoveRecords",
     UpdateDevice = "UpdateDevice",
     RemoveDevice = "RemoveDevice",
+    UpdateRule = "UpdateRule",
+    RemoveRule = "RemoveRule",
     Other = "Other",
 }
 
