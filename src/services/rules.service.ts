@@ -3,11 +3,15 @@ import { logger } from "./logger.service";
 import { RulesDBService } from "./rules-db.service";
 import { WebSocketService } from "./websocket.service";
 import { DevicesService } from './devices.service';
+import { checkRule } from "../utils/rules";
+import { AlarmsService } from "./alarms.service";
 
 export class RulesService {
     private rules: Map<number, Rule> = new Map();
 
-    constructor(private readonly devicesService: DevicesService) {
+    constructor(private readonly devicesService: DevicesService,
+        private readonly alarmsService: AlarmsService
+    ) {
         this.loadRules();
     }
 
@@ -88,5 +92,19 @@ export class RulesService {
         logger.info(`Rule removed: ${rule.name} (ID: ${ruleId})`, "RulesService");
 
         return true;
+    }
+
+    public async checkValue(value: string | null, deviceId: number, oid: string) {
+        for (const ruleId of this.devicesService.getRules(deviceId, oid)) {
+            const rule = this.rules.get(ruleId);
+            if (!rule)
+                continue;
+            const alarmId = this.alarmsService.findAlarm(deviceId, oid, ruleId);
+            if (checkRule(value, rule) && alarmId === undefined) {
+                this.alarmsService.addAlarm(this.alarmsService.makeAlarm(deviceId, oid, rule));
+            } else if (alarmId !== undefined) {
+                this.alarmsService.removeAlarm(alarmId);
+            }
+        }
     }
 }

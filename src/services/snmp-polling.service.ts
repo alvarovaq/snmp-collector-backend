@@ -3,6 +3,7 @@ import { SnmpV2CService } from "./snmp-v2c.service";
 import { SnmpV3Service } from "./snmp-v3.service";
 import { logger } from "./logger.service";
 import { OidRecordsService } from "./oid-records.service";
+import { RulesService } from "./rules.service";
 
 type IntervalKey = `${number}-${string}`;
 
@@ -15,8 +16,13 @@ interface IntervalInfo {
 export class SnmpPollingService
 {
     private intervals: Map<IntervalKey, IntervalInfo> = new Map();
+    private rulesService!: RulesService;
 
     constructor(private readonly oidRecordsService: OidRecordsService) {}
+
+    setRulesService(rulesService: RulesService) {
+        this.rulesService = rulesService;
+    }
 
     public startDevicePolling(device: Device): void {
         (async () => {
@@ -65,7 +71,8 @@ export class SnmpPollingService
     private async requestOids(deviceId: number, deviceConfig: DeviceConfig, oids: string[]): Promise<void> {
         try {
             const results = await this.getResults(deviceConfig, oids);
-            this.oidRecordsService.setValues(deviceId, results);
+            const oidResults = this.oidRecordsService.setValues(deviceId, results);
+            oidResults.forEach(o => this.rulesService.checkValue(o.value ?? null, o.deviceId, o.oid));
         } catch (err: any) {
             logger.error(`Polling error (device: ${deviceId}) (oids: ${oids}):`, "SnmpPollingService", err.name);
             

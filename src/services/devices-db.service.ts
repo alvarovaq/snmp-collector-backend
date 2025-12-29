@@ -80,7 +80,7 @@ export class DevicesDBService {
   public static async getRules(device_id: number, oid: string): Promise<number[]> {
     try {
         const query = `
-            SELECT rule
+            SELECT rule_id
             FROM oidsrules
             WHERE device_id = $1 AND oid = $2
         `;

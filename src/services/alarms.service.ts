@@ -13,8 +13,10 @@ export class AlarmsService {
 
     private async loadAlarms(): Promise<void> {
         logger.info("Loading alarms from BBDD", "AlarmsService");
-        //TODO: Cargar alarmas
+        
+        //TODO: Cargar alarmas de BBDD
         const alarms = [];
+
         logger.info(`${alarms.length} alarms loaded`, "AlarmsService");
     }
 
@@ -40,6 +42,11 @@ export class AlarmsService {
         };
         
         return alarm;
+    }
+
+    public findAlarm(deviceId: number, oid: string, ruleId: number): number | undefined {
+        const alarm = [...this.alarms.values()].find(alarm => alarm.deviceId === deviceId && alarm.oid === oid && alarm.ruleId === ruleId);
+        return alarm?.id;
     }
 
     public addAlarm(alarm: Alarm): Alarm | undefined {

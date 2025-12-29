@@ -29,6 +29,10 @@ export class DevicesService {
         return this.devices.get(deviceId);
     }
 
+    public getRules(deviceId: number, oid: string): number[] {
+        return [...this.devices.values()].find(device => device.id === deviceId)?.oids.find(o => o.oid === oid)?.rules || [];
+    }
+
     public async addDevice(device: Device): Promise<Device | undefined> {
         const id = await DevicesDBService.addDevice(device);
         if (id === -1)
