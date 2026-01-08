@@ -100,9 +100,10 @@ export class RulesService {
             if (!rule)
                 continue;
             const alarmId = this.alarmsService.findAlarm(deviceId, oid, ruleId);
-            if (checkRule(value, rule) && alarmId === undefined) {
+            const satisfy = checkRule(value, rule);
+            if (satisfy && alarmId === undefined) {
                 this.alarmsService.addAlarm(this.alarmsService.makeAlarm(deviceId, oid, rule));
-            } else if (alarmId !== undefined) {
+            } else if (!satisfy && alarmId !== undefined) {
                 this.alarmsService.removeAlarm(alarmId);
             }
         }
