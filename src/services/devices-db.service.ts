@@ -60,7 +60,6 @@ export class DevicesDBService {
         const oids: OidConfig[] = [];
         for (const row of rows) {
             const rules = await this.getRules(device_id, row.oid);
-            console.log(device_id, row.oid, rules);
             const oidConfig: OidConfig = {
                 oid: row.oid,
                 name: row.name,

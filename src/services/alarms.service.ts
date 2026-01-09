@@ -1,23 +1,14 @@
 import { Alarm, Rule, WSMessage, WSEvent } from "../models";
 import { ruleToString } from "../utils/rules";
+import { AlarmsDBService } from "./alarms-db.service";
 import { logger } from "./logger.service";
 import { WebSocketService } from "./websocket.service";
 
 export class AlarmsService {
     private alarms: Map<number, Alarm> = new Map();
-    private id: number = 0;
 
     constructor() {
-        this.loadAlarms();
-    }
-
-    private async loadAlarms(): Promise<void> {
-        logger.info("Loading alarms from BBDD", "AlarmsService");
-        
-        //TODO: Cargar alarmas de BBDD
-        const alarms = [];
-
-        logger.info(`${alarms.length} alarms loaded`, "AlarmsService");
+        AlarmsDBService.closeAlarms();
     }
 
     public getAlarms(): Alarm[] {
@@ -49,12 +40,13 @@ export class AlarmsService {
         return alarm?.id;
     }
 
-    public addAlarm(alarm: Alarm): Alarm | undefined {
-        const newAlarm = { ...alarm, id: this.id };
-        this.alarms.set(this.id, newAlarm);
-        this.id = this.id + 1;
-        
-        //TODO: Modificar en BBDD
+    public async addAlarm(alarm: Alarm): Promise<Alarm | undefined> {
+        const id = await AlarmsDBService.addAlarm(alarm);
+        if (id === -1)
+            return undefined;
+
+        const newAlarm = { ...alarm, id: id };
+        this.alarms.set(id, newAlarm);
 
         const msg: WSMessage = {
             event: WSEvent.UpdateAlarm,
@@ -65,11 +57,13 @@ export class AlarmsService {
         return newAlarm;
     }
 
-    public removeAlarm(alarmId: number): boolean {
+    public async removeAlarm(alarmId: number): Promise<boolean> {
         if (!this.alarms.has(alarmId))
             return false;
 
-        //TODO: Modificar en BBDD
+        const ok = await AlarmsDBService.removeAlarm(alarmId);
+        if (!ok)
+            return false;
 
         const msg: WSMessage = {
             event: WSEvent.RemoveAlarm,

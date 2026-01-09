@@ -13,13 +13,13 @@ export * from "./devices.service";
 export * from "./oid-records.service";
 export * from "./logger.service";
 
+const alarmsService = new AlarmsService();
 const oidRecordsService = new OidRecordsService();
 const snmpPollingService = new SnmpPollingService(oidRecordsService);
 const devicesService = new DevicesService(snmpPollingService);
 const snmpTrapListenerService = new SnmpTrapListenerService(env.snmp.port);
 const authService = new AuthService();
 const usersService = new UsersService(authService);
-const alarmsService = new AlarmsService();
 const rulesService = new RulesService(devicesService, alarmsService);
 
 snmpPollingService.setRulesService(rulesService);

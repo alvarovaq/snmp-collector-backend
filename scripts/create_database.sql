@@ -85,3 +85,23 @@ CREATE TABLE IF NOT EXISTS public.oidsrules (
         REFERENCES public.rules (id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS public.alarms (
+    id SERIAL PRIMARY KEY,
+    device_id INT NOT NULL,
+    oid VARCHAR(255) NOT NULL,
+    rule_id INT NOT NULL,
+    severity VARCHAR(50) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    date TIMESTAMP NOT NULL,
+    closed_at TIMESTAMP,
+    readed BOOLEAN,
+    CONSTRAINT fk_oid
+        FOREIGN KEY (device_id, oid)
+        REFERENCES public.oids (device_id, oid)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_rule
+        FOREIGN KEY (rule_id)
+        REFERENCES public.rules (id)
+        ON DELETE CASCADE
+);
