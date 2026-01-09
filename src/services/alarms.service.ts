@@ -74,4 +74,19 @@ export class AlarmsService {
         this.alarms.delete(alarmId);
         return true;
     }
+
+    public async readAlarm(alarmId: number, readed: boolean): Promise<Alarm | undefined> {
+        const alarm = this.alarms.get(alarmId);
+        if (!alarm)
+            return undefined;
+
+        alarm.readed = readed;
+        const ok = await AlarmsDBService.updateAlarm(alarm);
+        if (!ok)
+            return undefined;
+
+        this.alarms.set(alarmId, alarm);
+
+        return alarm;
+    }
 }
