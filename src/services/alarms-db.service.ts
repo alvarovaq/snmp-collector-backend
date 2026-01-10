@@ -73,6 +73,24 @@ export class AlarmsDBService {
     return false;
   }
 
+  public static async updateReaded(alarmId: number, readed: boolean): Promise<boolean> {
+    const client = await pool.connect();
+    try {
+        await client.query(
+            "UPDATE alarms SET readed = $1 WHERE id = $2",
+            [readed, alarmId]
+        );
+
+        return true;
+    } catch (err) {
+        logger.error("Failed to read alarm:", "AlarmsDBService", err);
+    } finally {
+        client.release();
+    }
+
+    return false;
+  }
+
   public static async removeAlarm(alarm_id: number): Promise<boolean> {
     try {
         const query = `

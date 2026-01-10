@@ -81,7 +81,7 @@ export class AlarmsService {
             return undefined;
 
         alarm.readed = readed;
-        const ok = await AlarmsDBService.updateAlarm(alarm);
+        const ok = await AlarmsDBService.updateReaded(alarmId, readed);
         if (!ok)
             return undefined;
 
