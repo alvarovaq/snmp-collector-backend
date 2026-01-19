@@ -8,7 +8,7 @@ type RecordKey = `${number}-${string}`;
 export class OidRecordsService {
     private records: Map<RecordKey, OidRecord> = new Map();
 
-    public setValues(deviceId: number, results: SnmpResult[]): void {
+    public setValues(deviceId: number, results: SnmpResult[]): OidRecord[] {
         const now = new Date();
         const records: OidRecord[] = [];
         for (const result of results) {
@@ -29,6 +29,8 @@ export class OidRecordsService {
             }
             WebSocketService.broadcast(msg);
         }
+
+        return records;
     }
 
     private setValue(deviceId: number, result: SnmpResult, date: Date, hasChange: boolean): OidRecord {

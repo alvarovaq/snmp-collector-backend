@@ -5,3 +5,4 @@ export * from "./websocket.model";
 export * from "./users.model";
 export * from "./auth.model";
 export * from "./rules.model";
+export * from "./alarms.model";

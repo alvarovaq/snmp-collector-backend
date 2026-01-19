@@ -5,6 +5,8 @@ export enum WSEvent {
     RemoveDevice = "RemoveDevice",
     UpdateRule = "UpdateRule",
     RemoveRule = "RemoveRule",
+    UpdateAlarm = "UpdateAlarm",
+    RemoveAlarm = "RemoveAlarm",
     Other = "Other",
 }
 

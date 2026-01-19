@@ -58,12 +58,13 @@ export class DevicesDBService {
 
         const { rows } = await pool.query(query, [device_id]);
         const oids: OidConfig[] = [];
-        for (const row of rows)         {
+        for (const row of rows) {
+            const rules = await this.getRules(device_id, row.oid);
             const oidConfig: OidConfig = {
                 oid: row.oid,
                 name: row.name,
                 frequency: row.frequency,
-                rules: await this.getRules(device_id, row.oid)
+                rules: rules
             };
 
             oids.push(oidConfig);
@@ -80,14 +81,14 @@ export class DevicesDBService {
   public static async getRules(device_id: number, oid: string): Promise<number[]> {
     try {
         const query = `
-            SELECT rule
+            SELECT rule_id
             FROM oidsrules
             WHERE device_id = $1 AND oid = $2
         `;
 
         const { rows } = await pool.query(query, [device_id, oid]);
         return rows.map((row: any) => {
-            return row.rule;
+            return row.rule_id;
         });
     } catch (err) {
         logger.error("Failed to get rules oid device:", "DevicesDBService", err);
